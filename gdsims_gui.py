@@ -104,7 +104,7 @@ class MainWindow(QMainWindow):
         webbrowser.open("https://acernorth.github.io/GeneralMetapop/")
         
     def getMaxT(self):
-        return self.centralWidget.maxTSB.value()
+        return self.centralWidget.paramSpace.maxTSB.value()
 
 class WindowWidget(QWidget):
     
@@ -1430,7 +1430,7 @@ class AdvancedWindow(QDialog):
             filename = Path(fname)
             filenameEdit.setText(str(filename))
             
-    def validIntervals(self):
+    def validParams(self):
         errs = 0 
         errMsgs = []
         maxT = self.parentWindow.getMaxT()
@@ -1448,11 +1448,11 @@ class AdvancedWindow(QDialog):
         # give warnings but still allow the values - no errors thrown
         if self.aesCheckbox.isChecked():
             if (self.t_hide1SB.value() > maxT) or (self.t_hide2SB.value() > maxT) or (self.tWake1SB.value() > maxT) or (self.tWake2SB.value() > maxT):
-                errMsgs.append("Warning: The aestivation interval times are larger than max_t.\nThe simulation will only run partly through the aestivation period.")
-        if self.recStart.value() > maxT:
-            errMsgs.append("Warning: rec_start > max_t. This simulation will not include local recording.")
-        if (maxT - self.recIntervalLocalSB.value() - self.recStart) < 0:
-            errMsgs.append("Warning: the interval between rec_start and max_t is larger than rec_interval_local.\nThe simulation will only record local data for day 0.")
+                errMsgs.append("The aestivation interval times are larger than max_t.\nThe simulation will only run partly through the aestivation period.")
+        if self.recStartSB.value() > maxT:
+            errMsgs.append("rec_start > max_t. This simulation will not include local recording.")
+        if (maxT - self.recIntervalLocalSB.value() - self.recStartSB.value()) < 0:
+            errMsgs.append("The interval between rec_start and max_t is larger than rec_interval_local.\nThe simulation will only record local data for day 0.")
             
         isValid = True
         if errs != 0:
@@ -1465,15 +1465,18 @@ class AdvancedWindow(QDialog):
         
     def applyChanges(self, btn):
         # only apply changes if pass bound and other checks  
-        isValid, errMsgs = self.validIntervals()
+        isValid, errMsgs = self.validParams()
         if isValid:
+            if errMsgs:
+                errMsgs = "\n".join(errMsgs)
+                QMessageBox.information(self, "Info", errMsgs)
             self.saveValues()
             self.applyBtn.setEnabled(False)
             if btn == "ok": # close dialog too if using ok button
                 self.accept()
         else:
             errMsgs = "\n".join(errMsgs)
-            QMessageBox.warning(self, "Invalid interval(s)", errMsgs)
+            QMessageBox.warning(self, "Invalid parameter(s)", errMsgs)
             
 class AdvParams():
     setLabel = 1
