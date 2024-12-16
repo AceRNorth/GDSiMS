@@ -61,7 +61,7 @@ class MainWindow(QMainWindow):
         self.setGeometry(left, top, width, height) # sets position and size of window
         self.setWindowIcon(QIcon("web.png")) # window icon on corner of window
         
-        self.advWindow = AdvancedWindow()
+        self.advWindow = AdvancedWindow(self)
         self.advWindow.hide()
         
         self.centralWidget = WindowWidget(self.advWindow)
@@ -79,24 +79,32 @@ class MainWindow(QMainWindow):
         
     def closeEvent(self, event):
         """Displays a question when the user tries to close the window to ask for confirmation on closing the window."""
-        
-        reply = QMessageBox.question(self, "Message", # creates a message box with a question that the user needs to answer, first string appears in titlebar, second string is message displayed by the dialog
-            "Are you sure you want to quit?", QMessageBox.Yes |   # give message in the box and what combination of buttons appear in the dialog, and what the default button is
-            QMessageBox.No, QMessageBox.No)
+        simRunning = self.centralWidget.simRunSpace.isSimRunning()
+        if simRunning: # gives specific warning message if sim is running
+            reply = QMessageBox.question(self, "Warning", 
+                "The simulation is still running.\nAre you sure you want to abort the run and quit?", QMessageBox.Yes | 
+                QMessageBox.No, QMessageBox.No)
+        else: 
+            reply = QMessageBox.question(self, "Message", # creates a message box with a question that the user needs to answer, first string appears in titlebar, second string is message displayed by the dialog
+                "Are you sure you want to quit?", QMessageBox.Yes |   # give message in the box and what combination of buttons appear in the dialog, and what the default button is
+                QMessageBox.No, QMessageBox.No)
 
         if reply == QMessageBox.Yes: # if user says yes, the widget will close
             event.accept()
             if self.advWindow != None:
                 self.advWindow.close()
                 self.advWindow = None
-            # if self.centralWidget.simRunSpace.abortBtn.isVisible():
-            #     self.centralWidget.simRunSpace.abortSim()
+            if simRunning:
+                self.centralWidget.simRunSpace.abortSim()
             exit()
         else: # otherwise widget won't close
             event.ignore()  
             
     def openDocs(self):
         webbrowser.open("https://acernorth.github.io/GeneralMetapop/")
+        
+    def getMaxT(self):
+        return self.centralWidget.maxTSB.value()
 
 class WindowWidget(QWidget):
     
@@ -158,6 +166,9 @@ class WindowWidget(QWidget):
     
     def runFinished(self, outputDir):
         self.plotSpace.runFinished(outputDir)
+        
+    def isSimRunning(self):
+        self.simRunSpace.isSimRunning()
       
 class WidgetParams(QWidget):
     def __init__(self, advWindow):
@@ -783,7 +794,7 @@ class InputParams():
       
 class AdvancedWindow(QDialog):
     
-    def __init__(self):
+    def __init__(self, parentWin):
         super().__init__()
         self.title = 'Advanced parameters' 
         self.left = 600
@@ -792,6 +803,7 @@ class AdvancedWindow(QDialog):
         self.height = 700
         self.setWindowIcon(QIcon('web.png')) 
         self.setWindowFlags(self.windowFlags() ^ Qt.WindowContextHelpButtonHint) # removes window help button
+        self.parentWindow = parentWin
         
         self.lastVals = AdvParams()
         self.rainfallFile = None
@@ -1421,6 +1433,7 @@ class AdvancedWindow(QDialog):
     def validIntervals(self):
         errs = 0 
         errMsgs = []
+        maxT = self.parentWindow.getMaxT()
         if self.recEndSB.value() < self.recStartSB.value():
             errs += 1
             errMsgs.append("rec_end must be equal to or larger than rec_start.")
@@ -1431,6 +1444,16 @@ class AdvancedWindow(QDialog):
             if self.tWake2SB.value() < self.tWake1SB.value():
                 errs += 1
                 errMsgs.append("t_wake2 must be equal to or larger than t_wake1.")
+                
+        # give warnings but still allow the values - no errors thrown
+        if self.aesCheckbox.isChecked():
+            if (self.t_hide1SB.value() > maxT) or (self.t_hide2SB.value() > maxT) or (self.tWake1SB.value() > maxT) or (self.tWake2SB.value() > maxT):
+                errMsgs.append("Warning: The aestivation interval times are larger than max_t.\nThe simulation will only run partly through the aestivation period.")
+        if self.recStart.value() > maxT:
+            errMsgs.append("Warning: rec_start > max_t. This simulation will not include local recording.")
+        if (maxT - self.recIntervalLocalSB.value() - self.recStart) < 0:
+            errMsgs.append("Warning: the interval between rec_start and max_t is larger than rec_interval_local.\nThe simulation will only record local data for day 0.")
+            
         isValid = True
         if errs != 0:
             isValid = False
@@ -1495,6 +1518,7 @@ class WidgetRun(QWidget):
     def __init__(self, winWidget):
         super().__init__()
         self.winWidget = winWidget 
+        self.simulation = None
         self.setLayout(QGridLayout())
         self.initUI()
         
@@ -1575,6 +1599,7 @@ class WidgetRun(QWidget):
             self.thread.finished.connect(self.thread.deleteLater)
             self.simulation.error.connect(self.runError)
     
+            self.abortCode = 0
             self.thread.start()
             
             # Disable and hide run button while subprocess is running and enable abort button in its place
@@ -1582,7 +1607,7 @@ class WidgetRun(QWidget):
             self.runBtn.hide()
             self.abortBtn.setEnabled(True)
             self.abortBtn.show()
-            self.thread.finished.connect(self.runFinished)
+            self.thread.finished.connect(lambda: self.runFinished(self.abortCode))
     
             # Start the QTimer to read the output file periodically
             # self.timer = QTimer(self)
@@ -1590,11 +1615,12 @@ class WidgetRun(QWidget):
             # self.timer.start(1000)  # Check for new output every 1 second
         
     def abortSim(self):
-        self.simulation.abort()
-        self.thread.aborted.connect(self.runAborted)
-        self.thread.quit()
-        self.thread.wait()
-        print("Aborting sim")
+       if self.simulation:
+           self.abortCode = 1
+           self.simulation.abort()
+           self.thread.quit()
+           self.thread.wait()
+           print("Aborting sim")
         
     def createOutputDir(self, dirPath, simName):
         isValidDir = False
@@ -1621,16 +1647,22 @@ class WidgetRun(QWidget):
             isValidDir = False
         return isValidDir
         
-    def runFinished(self):
+    def runFinished(self, abortCode):
         # Re-enable the button
         #self.timer.stop()
         self.abortBtn.setEnabled(False)
         self.abortBtn.hide()
         self.runBtn.show()
         self.runBtn.setEnabled(True)
-        self.progBar.setValue(100)
-        self.winWidget.runFinished(self.outputPath)
-        QMessageBox.information(self, "Info", "Simulation completed successfully!")
+        if abortCode == 0:
+            self.progBar.setValue(100)
+            self.winWidget.runFinished(self.outputPath)
+            QMessageBox.information(self, "Info", "Simulation completed successfully!")
+        else:
+            self.progBar.setValue(0)
+            self.winWidget.runFinished(self.outputPath)
+            QMessageBox.information(self, "Info", "Simulation aborted.")
+        self.simulation = None
         
     def runError(self, errorMsg):
         # Stop the timer and show the error
@@ -1639,22 +1671,16 @@ class WidgetRun(QWidget):
         self.abortBtn.hide()
         self.runBtn.show()
         self.runBtn.setEnabled(True)
-        
         QMessageBox.critical(self, "Error", errorMsg)
         
-    def runAborted(self):
-        self.abortBtn.setEnabled(False)
-        self.abortBtn.hide()
-        self.runBtn.show()
-        self.runBtn.setEnabled(True)
-        self.progBar.setValue(0)
-        self.winWidget.runFinished(self.outputPath)
-        QMessageBox.information(self, "Info", "Simulation aborted.")
-
-        
+    def isSimRunning(self):
+        if self.simulation != None:
+            return True
+        else:
+            return False
+       
 class Simulation(QObject):
     finished = pyqtSignal()
-    aborted = pyqtSignal()
     error = pyqtSignal(str)
     def __init__(self, outputPath, simName, dispType, boundaryType, rainfallFile, coordsFile, relTimesFile):
         super().__init__()
@@ -1702,17 +1728,15 @@ class Simulation(QObject):
             outs, errs = self.process.communicate(input=inputString)
             print("Error:", errs)
             self.process.wait()
-            if self.process.returncode == 0:
-                self.finished.emit()
+            self.finished.emit()
         except errs as e:
             print(f"Error output:\n{e}")
             self.process.terminate()
-            self.error.emit(f"An error occurred: {e}", )
+            self.error.emit(f"An error occurred: {e}",)
             
     def abort(self):
         if self.process:
             self.process.terminate()
-            self.aborted.emit()
         
 class WidgetPlot(QWidget): # widget containing plotcanvas and toolbar in same place
     """Creates a widget for the plotspace and plot interaction components."""
