@@ -357,7 +357,7 @@ class WidgetParams(QWidget):
                 recIntervalLocal = 200,
                 recSitesFreq = 1,
                 setLabel = 1,
-                dispType = "Distance kernel",
+                dispType = "Radial",
                 boundaryType = "Toroid",
                 rainfallFile = None,
                 coordsFile = None,
@@ -399,7 +399,7 @@ class WidgetParams(QWidget):
                 recIntervalLocal = 200,
                 recSitesFreq = 1,
                 setLabel = 2,
-                dispType = "Distance kernel",
+                dispType = "Radial",
                 boundaryType = "Toroid",
                 rainfallFile = None,
                 coordsFile = None,
@@ -441,7 +441,7 @@ class WidgetParams(QWidget):
                 recIntervalLocal = 200,
                 recSitesFreq = 1,
                 setLabel = 3,
-                dispType = "Distance kernel",
+                dispType = "Radial",
                 boundaryType = "Toroid",
                 rainfallFile = None,
                 coordsFile = None,
@@ -483,7 +483,7 @@ class WidgetParams(QWidget):
                 recIntervalLocal = 200,
                 recSitesFreq = 1,
                 setLabel = 4,
-                dispType = "Distance kernel",
+                dispType = "Radial",
                 boundaryType = "Toroid",
                 rainfallFile = None,
                 coordsFile = None,
@@ -525,7 +525,7 @@ class WidgetParams(QWidget):
                 recIntervalLocal = 200,
                 recSitesFreq = 1,
                 setLabel = 5,
-                dispType = "Distance kernel",
+                dispType = "Radial",
                 boundaryType = "Toroid",
                 rainfallFile = None,
                 coordsFile = None,
@@ -567,7 +567,7 @@ class WidgetParams(QWidget):
                 recIntervalLocal = 200,
                 recSitesFreq = 1,
                 setLabel = 6,
-                dispType = "Distance kernel",
+                dispType = "Radial",
                 boundaryType = "Toroid",
                 rainfallFile = None,
                 coordsFile = None,
@@ -582,8 +582,8 @@ class WidgetParams(QWidget):
         self.advWindow.rainfallFileCheckbox.setChecked(False)
         self.advWindow.coordsFileCheckbox.setChecked(False)
         self.advWindow.relTimesFileCheckbox.setChecked(False)
-        self.advWindow.dispTypeCB.setCurrentText("Distance kernel")
-        self.advWindow.dispTypeCB.setCurrentText("Toroid")
+        self.advWindow.dispTypeCB.setCurrentText("Radial")
+        self.advWindow.boundaryTypeCB.setCurrentText("Toroid")
         self.advWindow.rainfallFilenameEdit.setText("")
         self.advWindow.coordsFilenameEdit.setText("")
         self.advWindow.relTimesFilenameEdit.setText("")
@@ -1051,7 +1051,7 @@ class AdvancedWindow(QDialog):
         self.maxDispSB.valueChanged.connect(self.enableApply)
         dispTypeLabel = QLabel("dispersal type")
         self.dispTypeCB = QComboBox()
-        self.dispTypeCB.addItems(["Distance kernel", "Radial"])
+        self.dispTypeCB.addItems(["Radial", "Distance kernel"])
         self.dispTypeCB.currentTextChanged.connect(self.enableApply)
         
         line3 = QFrame()
@@ -1451,7 +1451,6 @@ class AdvancedWindow(QDialog):
                     errs += 1
                     errMsgs.append("An error occured with the rainfall file: {}".format(e))
                 
-                    
         if self.coordsFileCheckbox.isChecked():
             if self.coordsFilenameEdit.text() == "":
                 errs += 1
@@ -1547,7 +1546,7 @@ class AdvParams():
     minDev = 10
     dispRate = 0.01
     maxDisp = 0.2
-    dispType = "Distance kernel"
+    dispType = "Radial"
     aestivation = False
     psi = 0
     muAes = 0
