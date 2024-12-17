@@ -7,7 +7,7 @@ Created on Thu Oct 24 11:46:12 2024
 
 import sys
 import os
-import logging
+import shutil
 from pathlib import Path
 import re
 import subprocess
@@ -35,8 +35,7 @@ from PyQt5.QtWidgets import (
     QComboBox,
     QFileDialog,
     QTabWidget,
-    QDialog,
-    QDialogButtonBox
+    QDialog
     )
 from PyQt5.QtGui import QFont, QIcon, QColor, QPalette
 from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal, QTimer
@@ -163,6 +162,9 @@ class WindowWidget(QWidget):
     def createParamsFile(self, outputDir):
         customSet = self.paramSpace.createParamsFile(outputDir)
         return customSet
+    
+    def copyAdvFiles(self, outputDir):
+        self.paramSpace.copyAdvFiles(outputDir)
     
     def runStarted(self):
         self.plotSpace.runStarted()
@@ -730,6 +732,14 @@ class WidgetParams(QWidget):
             file.write(str(self.customSet.setLabel) + "\n")
             
         return self.customSet
+    
+    def copyAdvFiles(self, outputDir):
+        if self.customSet.rainfallFile != None:
+            shutil.copy(self.customSet.rainfallFile, os.path.join(outputDir, "rainfall.txt"))
+        if self.customSet.coordsFile != None:
+            shutil.copy(self.customSet.coordsFile, os.path.join(outputDir, "coords.txt"))
+        if self.customSet.relTimesFile != None:
+            shutil.copy(self.customSet.relTimesFile, os.path.join(outputDir, "reltimes.txt"))
       
 class InputParams():
     def __init__(self, numRuns, maxT, numPat, muJ, muA, beta, theta, compPower, minDev, gamma, xi, e, driverStart, numDriverM,
@@ -1635,6 +1645,7 @@ class WidgetRun(QWidget):
             self.progBar.setValue(0)
             self.winWidget.runStarted()
             customSet = self.winWidget.createParamsFile(self.outputPath)
+            self.winWidget.copyAdvFiles(self.outputPath) # so have all files used saved in same sim run directory
             
             # Create simulation run thread
             self.thread = QThread()
