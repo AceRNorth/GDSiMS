@@ -1436,16 +1436,21 @@ class AdvancedWindow(QDialog):
                 errs += 1
                 errMsgs.append("No rainfall file selected.")
             else:
-                rfData = np.loadtxt(self.rainfallFilenameEdit.text(), dtype=np.float64)
-                if len(rfData) == 365 or len(rfData) == maxT:
-                    for i in range(0, len(rfData)):
-                        dp = rfData[i]
-                        if dp < 0:
-                            errs += 1
-                            errMsgs.append("Rainfall value r for day {} is out of bounds r ≥ 0.".format(i+1))
-                else:
+                try:
+                    rfData = np.loadtxt(self.rainfallFilenameEdit.text(), dtype=np.float64)
+                    if len(rfData) == 365 or len(rfData) == maxT:
+                        for i in range(0, len(rfData)):
+                            dp = rfData[i]
+                            if dp < 0:
+                                errs += 1
+                                errMsgs.append("Rainfall value r for day {} is out of bounds r ≥ 0.".format(i+1))
+                    else:
+                        errs += 1
+                        errMsgs.append("The number of daily rainfall values in the file is not 365 or max_t.")
+                except Exception as e:
                     errs += 1
-                    errMsgs.append("The number of daily rainfall values in the file is not 365 or max_t.")
+                    errMsgs.append("An error occured with the rainfall file: {}".format(e))
+                
                     
         if self.coordsFileCheckbox.isChecked():
             if self.coordsFilenameEdit.text() == "":
@@ -1465,13 +1470,12 @@ class AdvancedWindow(QDialog):
                             try:
                                 x = float(x)
                             except Exception as e:
-                                #errs += 1
+                                errs += 1
                                 errMsgs.append("An error occured for patch coordinate x{}: {}".format(i+1, e))
-                                
                             try:
                                 y = float(y)
                             except Exception as e:
-                                #errs += 1
+                                errs += 1
                                 errMsgs.append("An error occured for patch coordinate y{}: {}".format(i+1, e))
                             if re.match(r"^y|n$", isRelSite) == None:
                                 errs += 1
