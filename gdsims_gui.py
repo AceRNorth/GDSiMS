@@ -105,6 +105,9 @@ class MainWindow(QMainWindow):
         
     def getMaxT(self):
         return self.centralWidget.paramSpace.maxTSB.value()
+    
+    def getNumPat(self):
+        return self.centralWidget.paramSpace.numPatSB.value()
 
 class WindowWidget(QWidget):
     
@@ -1434,6 +1437,7 @@ class AdvancedWindow(QDialog):
         errs = 0 
         errMsgs = []
         maxT = self.parentWindow.getMaxT()
+        numPat = self.parentWindow.getNumPat()
         if self.recEndSB.value() < self.recStartSB.value():
             errs += 1
             errMsgs.append("rec_end must be equal to or larger than rec_start.")
@@ -1444,6 +1448,69 @@ class AdvancedWindow(QDialog):
             if self.tWake2SB.value() < self.tWake1SB.value():
                 errs += 1
                 errMsgs.append("t_wake2 must be equal to or larger than t_wake1.")
+        
+        # read files and check values        
+        if self.rainfallFileCheckbox.isChecked():
+            if self.rainfallFilenameEdit.text() == "":
+                errs += 1
+                errMsgs.append("No rainfall file selected.")
+            else:
+                rfData = np.loadtxt(self.rainfallFilenameEdit.text(), dtype=np.float64)
+                if len(rfData) == 365 or len(rfData) == maxT:
+                    for i in range(0, len(rfData)):
+                        dp = rfData[i]
+                        if dp < 0:
+                            errs += 1
+                            errMsgs.append("Rainfall value r for day {} is out of bounds r ≥ 0.".format(i+1))
+                else:
+                    errs += 1
+                    errMsgs.append("The number of daily rainfall values in the file is not 365 or max_t.")
+                    
+        if self.coordsFileCheckbox.isChecked():
+            if self.coordsFilenameEdit.text() == "":
+                errs += 1
+                errMsgs.append("No patch coordinates file selected.")
+            else:
+                # use this method to check the different data types 
+                with open(self.coordsFilenameEdit.text(), 'r') as file: 
+                    lines = file.readlines()
+                    if len(lines) != numPat:
+                        errs += 1
+                        errMsgs.append("The number of patch coordinates in the file does not match num_pat.")
+                    else:
+                        for i in range(0, len(lines)):
+                            line = lines[i].strip() # strip surrounding whitespace
+                            x, y, isRelSite = line.split() # split into column values
+                            try:
+                                x = float(x)
+                            except Exception as e:
+                                errMsgs.append("An error occured for patch coordinate x{}: {}".format(i+1, e))
+                                
+                            try:
+                                y = float(y)
+                            except Exception as e:
+                                errMsgs.append("An error occured for patch coordinate y{}: {}".format(i+1, e))
+                            if re.match(r"^y|n$", isRelSite) == None:
+                                errs += 1
+                                errMsgs.append("Patch coordinate {} has an invalid release site choice.".format(i+1))   
+        
+        if self.relTimesFileCheckbox.isChecked():
+            if self.relTimesFilenameEdit.text() == "":
+                errs += 1
+                errMsgs.append("No release times file selected.")
+            else:
+                # use this method to check for floats (cannot convert floats to ints)
+                with open(self.relTimesFilenameEdit.text(), 'r') as file: 
+                    lines = file.readlines()
+                    for i in range(0, len(lines)):
+                        dp = lines[i].strip()
+                        if re.match(r"^[-+]?[0-9]+$", dp):
+                            dp = int(dp)
+                            if dp < 0 or dp > maxT:
+                                errs += 1
+                                errMsgs.append("Release time t{} is out of bounds 0 ≤ t ≤ max_t.".format(i+1))
+                        else:
+                            errMsgs.append("Release time t{} is not an integer.".format(i+1))
                 
         # give warnings but still allow the values - no errors thrown
         if self.aesCheckbox.isChecked():
@@ -1674,6 +1741,7 @@ class WidgetRun(QWidget):
         self.abortBtn.hide()
         self.runBtn.show()
         self.runBtn.setEnabled(True)
+        self.progBar.setValue(0)
         QMessageBox.critical(self, "Error", errorMsg)
         
     def isSimRunning(self):
@@ -1723,19 +1791,22 @@ class Simulation(QObject):
         inputString += "0" + "\n"
        
         # Run C++ model with input data
-        try: 
-            os.chdir(self.outputPath) # directory for output files
-            env = os.environ.copy()
-            env["PATH"] = r"C:\msys64\mingw64\bin;" + env["PATH"]
-            self.process = subprocess.Popen([self.exeFilepath], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env)
-            outs, errs = self.process.communicate(input=inputString)
-            print("Error:", errs)
-            self.process.wait()
-            self.finished.emit()
-        except errs as e:
-            print(f"Error output:\n{e}")
-            self.process.terminate()
-            self.error.emit(f"An error occurred: {e}",)
+        #try: 
+        os.chdir(self.outputPath) # directory for output files
+        env = os.environ.copy()
+        env["PATH"] = r"C:\msys64\mingw64\bin;" + env["PATH"]
+        self.process = subprocess.Popen([self.exeFilepath], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
+        outs, errs = self.process.communicate(input=inputString)
+        print("Error:", errs)
+        print("Outs:", outs)
+        for e in errs:
+            self.error.emit("An error occurred: {e}")
+        self.process.wait()
+        self.finished.emit()
+        # except errs as e:
+        #     self.error.emit(f"An error occurred: {e}",)
+        #     self.process.terminate()
+            
             
     def abort(self):
         if self.process:
