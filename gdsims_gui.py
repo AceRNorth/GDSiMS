@@ -232,13 +232,6 @@ class WidgetParams(QWidget):
         self.numPatSB.setValue(100)
         self.numPatSB.setSingleStep(10)
         self.numPatSB.resize(self.numPatSB.sizeHint())
-        sideLabel = QLabel("side")
-        sideLabel.setToolTip("Size of the square simulation area (side x side).")
-        self.sideSB = QDoubleSpinBox()
-        self.sideSB.setMinimum(0) # should not include 0
-        self.sideSB.setMaximum(10000)
-        self.sideSB.setValue(1.0)
-        self.sideSB.resize(self.sideSB.sizeHint())
         
         line2 = QFrame()
         line2.setFrameShape(QFrame.HLine)
@@ -311,22 +304,20 @@ class WidgetParams(QWidget):
         self.layout().addWidget(self.maxTSB, 6, 1)
         self.layout().addWidget(numPatLabel, 7, 0)
         self.layout().addWidget(self.numPatSB, 7, 1)
-        self.layout().addWidget(sideLabel, 8, 0)
-        self.layout().addWidget(self.sideSB, 8, 1)
-        self.layout().addWidget(line2, 9, 0, 1, 2)
-        self.layout().addWidget(inherTitle, 10, 0, 1, 2)
-        self.layout().addWidget(xiLabel, 11, 0)
-        self.layout().addWidget(self.xiSB, 11, 1)
-        self.layout().addWidget(eLabel, 12, 0)
-        self.layout().addWidget(self.eSB, 12, 1)
-        self.layout().addWidget(line3, 13, 0, 1, 2)
-        self.layout().addWidget(releaseTitle, 14, 0, 1, 2)
-        self.layout().addWidget(driverStartLabel, 15, 0)
-        self.layout().addWidget(self.driverStartSB, 15, 1)
-        self.layout().addWidget(numDriverMLabel, 16, 0)
-        self.layout().addWidget(self.numDriverMSB, 16, 1)
-        self.layout().addWidget(numDriverSitesLabel, 17, 0)
-        self.layout().addWidget(self.numDriverSitesSB, 17, 1)
+        self.layout().addWidget(line2, 8, 0, 1, 2)
+        self.layout().addWidget(inherTitle, 9, 0, 1, 2)
+        self.layout().addWidget(xiLabel, 10, 0)
+        self.layout().addWidget(self.xiSB, 10, 1)
+        self.layout().addWidget(eLabel, 11, 0)
+        self.layout().addWidget(self.eSB, 11, 1)
+        self.layout().addWidget(line3, 12, 0, 1, 2)
+        self.layout().addWidget(releaseTitle, 13, 0, 1, 2)
+        self.layout().addWidget(driverStartLabel, 14, 0)
+        self.layout().addWidget(self.driverStartSB, 14, 1)
+        self.layout().addWidget(numDriverMLabel, 15, 0)
+        self.layout().addWidget(self.numDriverMSB, 15, 1)
+        self.layout().addWidget(numDriverSitesLabel, 16, 0)
+        self.layout().addWidget(self.numDriverSitesSB, 16, 1)
         self.layout().addWidget(line4, 18, 0, 1, 2)
         self.layout().addWidget(advancedBtn, 19, 0)
       
@@ -335,7 +326,6 @@ class WidgetParams(QWidget):
                 numRuns = 1, 
                 maxT = 1000,
                 numPat = 100,
-                side = 1.0,
                 muJ = 0.05,
                 muA = 0.125,
                 beta = 100.0,
@@ -378,7 +368,6 @@ class WidgetParams(QWidget):
                 numRuns = 1, 
                 maxT = 1000,
                 numPat = 100,
-                side = 1.0,
                 muJ = 0.05,
                 muA = 0.125,
                 beta = 100.0,
@@ -421,7 +410,6 @@ class WidgetParams(QWidget):
                 numRuns = 1, 
                 maxT = 1000,
                 numPat = 100,
-                side = 1.0,
                 muJ = 0.05,
                 muA = 0.125,
                 beta = 100.0,
@@ -464,7 +452,6 @@ class WidgetParams(QWidget):
                 numRuns = 1, 
                 maxT = 1000,
                 numPat = 100,
-                side = 1.0,
                 muJ = 0.05,
                 muA = 0.125,
                 beta = 100.0,
@@ -507,7 +494,6 @@ class WidgetParams(QWidget):
                 numRuns = 1, 
                 maxT = 1000,
                 numPat = 100,
-                side = 1.0,
                 muJ = 0.05,
                 muA = 0.125,
                 beta = 100.0,
@@ -550,7 +536,6 @@ class WidgetParams(QWidget):
                 numRuns = 1, 
                 maxT = 1000,
                 numPat = 100,
-                side = 1.0,
                 muJ = 0.05,
                 muA = 0.125,
                 beta = 100.0,
@@ -615,7 +600,6 @@ class WidgetParams(QWidget):
         self.numRunsSB.setValue(self.sets[setIndex].numRuns)
         self.maxTSB.setValue(self.sets[setIndex].maxT)
         self.numPatSB.setValue(self.sets[setIndex].numPat)
-        self.sideSB.setValue(self.sets[setIndex].side)
         self.xiSB.setValue(self.sets[setIndex].xi)
         self.eSB.setValue(self.sets[setIndex].e)
         self.driverStartSB.setValue(self.sets[setIndex].driverStart)
@@ -668,7 +652,6 @@ class WidgetParams(QWidget):
                             numRuns = self.numRunsSB.value(), 
                             maxT = self.maxTSB.value(),
                             numPat = self.numPatSB.value(),
-                            side = self.sideSB.value(),
                             muJ = advParams.muJ,
                             muA = advParams.muA,
                             beta = advParams.beta,
@@ -714,7 +697,6 @@ class WidgetParams(QWidget):
             file.write(str(self.customSet.numRuns) + "\n")
             file.write(str(self.customSet.maxT) + "\n")
             file.write(str(self.customSet.numPat) + "\n")
-            file.write(str(self.customSet.side) + "\n")
             file.write(str(self.customSet.muJ) + "\n")
             file.write(str(self.customSet.muA) + "\n")
             file.write(str(self.customSet.beta) + "\n")
@@ -750,14 +732,13 @@ class WidgetParams(QWidget):
         return self.customSet
       
 class InputParams():
-    def __init__(self, numRuns, maxT, numPat, side, muJ, muA, beta, theta, compPower, minDev, gamma, xi, e, driverStart, numDriverM,
+    def __init__(self, numRuns, maxT, numPat, muJ, muA, beta, theta, compPower, minDev, gamma, xi, e, driverStart, numDriverM,
                  numDriverSites, dispRate, maxDisp, psi, muAes, tHide1, tHide2, tWake1, tWake2, alpha0Mean, alpha0Variance, alpha1,
                  amp, resp, recStart, recEnd, recIntervalGlobal, recIntervalLocal, recSitesFreq, setLabel, dispType, boundaryType,
                  rainfallFile, coordsFile, relTimesFile):
         self.numRuns = numRuns
        	self.maxT = maxT
        	self.numPat = numPat
-       	self.side = side
        	self.muJ = muJ
        	self.muA = muA
        	self.beta = beta
