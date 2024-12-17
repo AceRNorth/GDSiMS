@@ -1465,11 +1465,13 @@ class AdvancedWindow(QDialog):
                             try:
                                 x = float(x)
                             except Exception as e:
+                                #errs += 1
                                 errMsgs.append("An error occured for patch coordinate x{}: {}".format(i+1, e))
                                 
                             try:
                                 y = float(y)
                             except Exception as e:
+                                #errs += 1
                                 errMsgs.append("An error occured for patch coordinate y{}: {}".format(i+1, e))
                             if re.match(r"^y|n$", isRelSite) == None:
                                 errs += 1
@@ -1718,12 +1720,8 @@ class WidgetRun(QWidget):
     def runError(self, errorMsg):
         # Stop the timer and show the error
         #self.timer.stop()
-        self.abortBtn.setEnabled(False)
-        self.abortBtn.hide()
-        self.runBtn.show()
-        self.runBtn.setEnabled(True)
-        self.progBar.setValue(0)
         QMessageBox.critical(self, "Error", errorMsg)
+        self.abortSim()
         
     def isSimRunning(self):
         if self.simulation != None:
@@ -1772,22 +1770,19 @@ class Simulation(QObject):
         inputString += "0" + "\n"
        
         # Run C++ model with input data
-        #try: 
         os.chdir(self.outputPath) # directory for output files
         env = os.environ.copy()
         env["PATH"] = r"C:\msys64\mingw64\bin;" + env["PATH"]
         self.process = subprocess.Popen([self.exeFilepath], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
         outs, errs = self.process.communicate(input=inputString)
-        print("Error:", errs)
-        print("Outs:", outs)
-        for e in errs:
-            self.error.emit("An error occurred: {e}")
-        self.process.wait()
-        self.finished.emit()
-        # except errs as e:
-        #     self.error.emit(f"An error occurred: {e}",)
-        #     self.process.terminate()
-            
+        # check for errors whilst process is running and emit error signal
+        # (can't use except because cerrs, not subprocess errs)
+        if errs: 
+            self.error.emit(errs)
+            self.process.terminate()
+        else: # don't let finished signal emit if have errors
+            self.process.wait()
+            self.finished.emit()
             
     def abort(self):
         if self.process:
