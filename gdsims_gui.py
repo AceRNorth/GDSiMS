@@ -1859,6 +1859,16 @@ class WidgetPlotTotals(WidgetPlot):
     
     def totalsInitUI(self):
         """ """
+        self.allCheckbox = QCheckBox("All\ngenotypes")
+        self.allCheckbox.setToolTip("WW + WD + DD + WR + RR + DR")
+        self.allCheckbox.resize(self.allCheckbox.sizeHint())
+        self.allCheckbox.setChecked(True)
+        
+        self.transmitCheckbox = QCheckBox("Capable of\nmalaria\ntransmission")
+        self.transmitCheckbox.setToolTip("WW + WD + WR")
+        self.transmitCheckbox.resize(self.transmitCheckbox.sizeHint())
+        self.transmitCheckbox.setChecked(True)
+        
         self.mWWcheckbox = QCheckBox("WW")
         self.mWWcheckbox.setToolTip("Wild homozygous males.")
         self.mWWcheckbox.resize(self.mWWcheckbox.sizeHint())
@@ -1895,6 +1905,8 @@ class WidgetPlotTotals(WidgetPlot):
         interactLayout = QVBoxLayout()
         
         interactLayout.addWidget(self.runsCB)
+        interactLayout.addWidget(self.allCheckbox)
+        interactLayout.addWidget(self.transmitCheckbox)
         interactLayout.addWidget(self.mWWcheckbox)
         interactLayout.addWidget(self.mWDcheckbox)
         interactLayout.addWidget(self.mDDcheckbox)
@@ -1907,13 +1919,14 @@ class WidgetPlotTotals(WidgetPlot):
         
         layout.addWidget(self.toolbar, 0, 0, 1, 5) # toolbar goes before so is placed above canvas
         layout.addWidget(self.canvas, 1, 0, 1, 5)
-        layout.addWidget(interactBox, 1, 5, 1, 2)
+        layout.addWidget(interactBox, 1, 5, 1, 1)
         
         self.setLayout(layout)
         
     def checkboxState(self):
         """Returns a list of indices to be plotted depending on the checkboxes that are checked."""
         lines=[]
+        
         if self.mWWcheckbox.isChecked() == True:
             lines.append(0)
         if self.mWDcheckbox.isChecked() == True:
@@ -1926,6 +1939,10 @@ class WidgetPlotTotals(WidgetPlot):
             lines.append(4)
         if self.mDRcheckbox.isChecked() == True:
             lines.append(5)
+        if self.allCheckbox.isChecked() == True:
+            lines.append(6)
+        if self.transmitCheckbox.isChecked() == True:
+            lines.append(7)
         return lines
     
     def plotClick(self):
@@ -2019,6 +2036,7 @@ class TotalsPlotCanvas(PlotCanvas):
         for line in lines:  # keep same colours for same type of line
             lbl = ""
             col = "mediumturquoise"
+            
             if line == 0:
                 lbl = "$M_{WW}$"
                 col = "mediumturquoise"
@@ -2033,12 +2051,25 @@ class TotalsPlotCanvas(PlotCanvas):
                 col = "slategray"
             elif line == 4:
                 lbl = "$M_{RR}$"
-                col = "black"
+                col = "rebeccapurple"
             elif line == 5:
                 lbl = "$M_{DR}$"
                 col = "darkviolet"
-                
-            self.axes.plot(times, total_males[:, line], label=lbl, color=col) 
+            elif line == 6:
+                lbl = "$M_{WW}$+$M_{WD}$+\n$M_{DD}$+$M_{WR}$+\n$M_{RR}$+$M_{DR}$"
+                col = "black"
+            elif line == 7:
+                lbl = "$M_{WW}$+$M_{WD}$+\n$M_{WR}$"
+                col = "hotpink"
+            
+            y = []
+            if line == 6:
+                y = np.sum(total_males, axis=1).tolist()
+            if line == 7:
+                y = np.sum(total_males[:, (0, 1, 3)], axis=1).tolist()
+            if line >= 0 and line < 6:
+                y = total_males[:, line]
+            self.axes.plot(times, y, label=lbl, color=col) 
      
         self.axes.set_xlabel("Day")
         self.axes.set_ylabel("Total number of individuals")
