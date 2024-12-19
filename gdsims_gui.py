@@ -126,8 +126,11 @@ class WindowWidget(QWidget):
         self.paramSpace = WidgetParams(advWindow)
         self.simRunSpace = WidgetRun(self)
         plotTabs = QTabWidget(self)
-        self.plotSpace = WidgetPlot()
-        plotTabs.addTab(self.plotSpace, "Totals")
+        self.totalsPlotSpace = WidgetPlotTotals()
+        self.coordsPlotSpace = WidgetPlotCoords()
+        self.plotSpaces = [self.totalsPlotSpace, self.coordsPlotSpace]
+        plotTabs.addTab(self.totalsPlotSpace, "Totals")
+        plotTabs.addTab(self.coordsPlotSpace, "Coords")
         
         # layout structure
         self.mainBox = QGroupBox()
@@ -167,10 +170,12 @@ class WindowWidget(QWidget):
         self.paramSpace.copyAdvFiles(outputDir)
     
     def runStarted(self):
-        self.plotSpace.runStarted()
+        for plot in self.plotSpaces:
+            plot.runStarted()
     
     def runFinished(self, outputDir):
-        self.plotSpace.runFinished(outputDir)
+        for plot in self.plotSpaces:
+            plot.runFinished(outputDir)
         
     def isSimRunning(self):
         self.simRunSpace.isSimRunning()
@@ -1800,19 +1805,17 @@ class Simulation(QObject):
             
     def abort(self):
         if self.process:
-            self.process.terminate()
-        
+            self.process.terminate()        
+           
 class WidgetPlot(QWidget): # widget containing plotcanvas and toolbar in same place
     """Creates a widget for the plotspace and plot interaction components."""
     
-    def __init__(self):
+    def __init__(self, canvas):
         QWidget.__init__(self)
-        self.initUI()
+        self.canvas = canvas
+        self.baseInitUI()
     
-    def initUI(self):
-        layout = QGridLayout()
-        
-        self.canvas = PlotCanvas()
+    def baseInitUI(self):
         self.toolbar = NavBar(self.canvas)
         self.runsCB = QComboBox()
         self.plotBtn = QPushButton("Plot")
@@ -1820,9 +1823,42 @@ class WidgetPlot(QWidget): # widget containing plotcanvas and toolbar in same pl
         self.plotBtn.setEnabled(False)
         self.plotBtn.clicked.connect(self.plotClick)
         
-        interactBox = QGroupBox()
-        interactLayout = QVBoxLayout()
+    def createGridLayout(self):
+        """ """
+    
+    def plotClick(self):
+        """Plots the function with the new selected parameters on the plot canvas."""
         
+    def runStarted(self):
+        self.plotBtn.setEnabled(False)
+        
+    def runFinished(self, outputDir):
+        self.plotBtn.setEnabled(True)
+        self.findPlotFiles(outputDir)
+        self.updateRuns()
+        
+    def findPlotFiles(self, outputDir):
+        self.dataFiles = []
+    
+    def updateRuns(self):
+        runs = []
+        for f in self.dataFiles:
+            m = re.search(r"run(\d+)", f)
+            runs.append("Run "+ m.group(1))
+        self.runsCB.clear()
+        self.runsCB.addItems(runs)
+
+class WidgetPlotTotals(WidgetPlot):
+    """Creates a widget for the plotspace and plot interaction components."""
+    
+    def __init__(self):
+        self.canvas = TotalsPlotCanvas()
+        super().__init__(self.canvas)
+        self.totalsInitUI()
+        self.createGridLayout()
+    
+    def totalsInitUI(self):
+        """ """
         self.mWWcheckbox = QCheckBox("WW")
         self.mWWcheckbox.setToolTip("Wild homozygous males.")
         self.mWWcheckbox.resize(self.mWWcheckbox.sizeHint())
@@ -1852,6 +1888,11 @@ class WidgetPlot(QWidget): # widget containing plotcanvas and toolbar in same pl
         self.mDRcheckbox.setToolTip("Drive/drive resistant heterozygous males.")
         self.mDRcheckbox.resize(self.mDRcheckbox.sizeHint())
         self.mDRcheckbox.setChecked(True) 
+        
+    def createGridLayout(self):
+        layout = QGridLayout()
+        interactBox = QGroupBox()
+        interactLayout = QVBoxLayout()
         
         interactLayout.addWidget(self.runsCB)
         interactLayout.addWidget(self.mWWcheckbox)
@@ -1891,36 +1932,55 @@ class WidgetPlot(QWidget): # widget containing plotcanvas and toolbar in same pl
         """Plots the function with the new selected parameters on the plot canvas."""
         runNum = re.search(r"\d+", self.runsCB.currentText())[0]
         rgx = r"Totals\d+run" + runNum
-        plotFile = [f for f in self.totalsFiles if re.match(rgx, os.path.basename(f))][0]
+        plotFile = [f for f in self.dataFiles if re.match(rgx, os.path.basename(f))][0]
         self.canvas.plot(plotFile, self.checkboxState())
-        
-    def runStarted(self):
-        self.plotBtn.setEnabled(False)
-        
-    def runFinished(self, outputDir):
-        self.plotBtn.setEnabled(True)
-        self.findPlotFiles(outputDir)
-        self.updateRuns()
-        
+
     def findPlotFiles(self, outputDir):
         if os.path.exists(os.path.join(outputDir, "output_files")):
             allFiles = [f for f in os.listdir(outputDir / "output_files") 
                         if os.path.isfile(os.path.join(outputDir, "output_files", f))]
-            self.coordFiles = [os.path.join(outputDir, "output_files", f) for f in allFiles if re.match("CoordinateList", os.path.basename(f))]
-            self.localDataFiles = [os.path.join(outputDir, "output_files", f) for f in allFiles if re.match("LocalData", os.path.basename(f))]
-            self.totalsFiles = [os.path.join(outputDir, "output_files", f) for f in allFiles if re.match("Totals", os.path.basename(f))]
+            #self.localDataFiles = [os.path.join(outputDir, "output_files", f) for f in allFiles if re.match("LocalData", os.path.basename(f))]
+            self.dataFiles = [os.path.join(outputDir, "output_files", f) for f in allFiles if re.match("Totals", os.path.basename(f))]
+
+class WidgetPlotCoords(WidgetPlot):
+    """Creates a widget for the plotspace and plot interaction components."""
     
-    def updateRuns(self):
-        runs = []
-        for f in self.totalsFiles:
-            m = re.search(r"run(\d+)", f)
-            runs.append("Run "+ m.group(1))
-            
-        self.runsCB.clear()
-        self.runsCB.addItems(runs)
+    def __init__(self):
+        self.canvas = CoordsPlotCanvas()
+        super().__init__(self.canvas)
+        self.createGridLayout()
+        
+    def createGridLayout(self):
+        layout = QGridLayout()
+        interactBox = QGroupBox()
+        interactLayout = QVBoxLayout()
+        
+        interactLayout.addWidget(self.runsCB)
+        interactLayout.addWidget(self.plotBtn)
+        interactLayout.addStretch() # create a stretch of filler space between components
+        interactBox.setLayout(interactLayout)
+        
+        layout.addWidget(self.toolbar, 0, 0, 1, 5) # toolbar goes before so is placed above canvas
+        layout.addWidget(self.canvas, 1, 0, 1, 5)
+        layout.addWidget(interactBox, 1, 5, 1, 2)
+        
+        self.setLayout(layout)    
+        
+    def plotClick(self):
+        """Plots the function with the new selected parameters on the plot canvas."""
+        runNum = re.search(r"\d+", self.runsCB.currentText())[0]
+        rgx = r"CoordinateList\d+run" + runNum
+        plotFile = [f for f in self.dataFiles if re.match(rgx, os.path.basename(f))][0]
+        self.canvas.plot(plotFile)
+
+    def findPlotFiles(self, outputDir):
+        if os.path.exists(os.path.join(outputDir, "output_files")):
+            allFiles = [f for f in os.listdir(outputDir / "output_files") 
+                        if os.path.isfile(os.path.join(outputDir, "output_files", f))]
+            self.dataFiles = [os.path.join(outputDir, "output_files", f) for f in allFiles if re.match("CoordinateList", os.path.basename(f))]
 
 class PlotCanvas(FigureCanvas):
-    """Plots the function with the y and n parameters specified, where y and n are lists."""
+    """Creates a figure plot from a data file."""
     
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         # tight layout makes sure the labels are not cut off in the canvas when they become bigger in replots
@@ -1935,9 +1995,24 @@ class PlotCanvas(FigureCanvas):
                 QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self) # allows figure to change size with window
          
+    def plot(self, file, *args): 
+        self.axes.clear() # clears plot on the plot canvas before plotting the new curve(s)
+        data = np.loadtxt(file, skiprows=2)
+        x = data[:, 0]
+        y_lines = data[:, 1:]
+        for line in y_lines:  # keep same colours for same type of line
+            self.axes.plot(x, line) 
+        self.axes.set_xlabel("x")
+        self.axes.set_ylabel("y")
+        self.axes.legend() # creates a legend for each curve
+        self.draw() # draws the curve(s) on the canvas
+        
+class TotalsPlotCanvas(PlotCanvas):
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        super().__init__(parent, width, height, dpi)
+         
     def plot(self, file, lines:list): # sets variables of function (have to be lists)
         self.axes.clear() # clears plot on the plot canvas before plotting the new curve(s)
-
         totals = np.loadtxt(file, skiprows=2)
         times = totals[:, 0]
         total_males = totals[:, 1:]
@@ -1968,6 +2043,21 @@ class PlotCanvas(FigureCanvas):
         self.axes.set_xlabel("Day")
         self.axes.set_ylabel("Total number of individuals")
         self.axes.legend() # creates a legend for each curve
+        self.draw() # draws the curve(s) on the canvas
+        
+class CoordsPlotCanvas(PlotCanvas):
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        super().__init__(parent, width, height, dpi)
+    def plot(self, file, *args): 
+        self.axes.clear() # clears plot on the plot canvas before plotting the new curve(s)
+        data = np.loadtxt(file, skiprows=2)
+        x = data[:, 1]
+        y = data[:, 2]
+        self.axes.scatter(x, y, marker='.', color="peru")
+        self.axes.set_xlim(np.amin(x), np.amax(x))
+        self.axes.set_ylim(np.amin(y), np.amax(y))
+        self.axes.set_xlabel("x")
+        self.axes.set_ylabel("y")
         self.draw() # draws the curve(s) on the canvas
         
 if __name__ == "__main__":
