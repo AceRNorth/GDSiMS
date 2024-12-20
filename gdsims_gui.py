@@ -2031,8 +2031,8 @@ class TotalsPlotCanvas(PlotCanvas):
     def plot(self, file, lines:list): # sets variables of function (have to be lists)
         self.axes.clear() # clears plot on the plot canvas before plotting the new curve(s)
         totals = np.loadtxt(file, skiprows=2)
-        times = totals[:, 0]
-        total_males = totals[:, 1:]
+        times = totals[100:, 0] - 100 # discard first 100 days and rescale day no. for (starts from day 0)
+        total_males = totals[100:, 1:]
         for line in lines:  # keep same colours for same type of line
             lbl = ""
             col = "mediumturquoise"
