@@ -35,7 +35,8 @@ from PyQt5.QtWidgets import (
     QComboBox,
     QFileDialog,
     QTabWidget,
-    QDialog
+    QDialog,
+    QSlider
     )
 from PyQt5.QtGui import QFont, QIcon, QColor, QPalette
 from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal, QTimer
@@ -43,6 +44,8 @@ from datetime import datetime
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavBar
 from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
         
 basefile = Path(__file__)
 basedir = basefile.parents[0]
@@ -128,9 +131,11 @@ class WindowWidget(QWidget):
         plotTabs = QTabWidget(self)
         self.totalsPlotSpace = WidgetPlotTotals()
         self.coordsPlotSpace = WidgetPlotCoords()
-        self.plotSpaces = [self.totalsPlotSpace, self.coordsPlotSpace]
+        self.localPlotSpace = WidgetPlotLocal()
+        self.plotSpaces = [self.totalsPlotSpace, self.coordsPlotSpace, self.localPlotSpace]
         plotTabs.addTab(self.totalsPlotSpace, "Totals")
         plotTabs.addTab(self.coordsPlotSpace, "Coords")
+        plotTabs.addTab(self.localPlotSpace, "Local - Drive allele freq.")
         
         # layout structure
         self.mainBox = QGroupBox()
@@ -1835,10 +1840,14 @@ class WidgetPlot(QWidget): # widget containing plotcanvas and toolbar in same pl
     def runFinished(self, outputDir):
         self.plotBtn.setEnabled(True)
         self.findPlotFiles(outputDir)
-        self.updateRuns()
+        self.updateBtns(outputDir)
         
     def findPlotFiles(self, outputDir):
         self.dataFiles = []
+    
+    def updateBtns(self, outputDir):
+        """ Updates UI buttons in the interaction box for runs just made."""
+        self.updateRuns()
     
     def updateRuns(self):
         runs = []
@@ -1956,12 +1965,10 @@ class WidgetPlotTotals(WidgetPlot):
         if os.path.exists(os.path.join(outputDir, "output_files")):
             allFiles = [f for f in os.listdir(outputDir / "output_files") 
                         if os.path.isfile(os.path.join(outputDir, "output_files", f))]
-            #self.localDataFiles = [os.path.join(outputDir, "output_files", f) for f in allFiles if re.match("LocalData", os.path.basename(f))]
             self.dataFiles = [os.path.join(outputDir, "output_files", f) for f in allFiles if re.match("Totals", os.path.basename(f))]
 
 class WidgetPlotCoords(WidgetPlot):
     """Creates a widget for the plotspace and plot interaction components."""
-    
     def __init__(self):
         self.canvas = CoordsPlotCanvas()
         super().__init__(self.canvas)
@@ -1996,22 +2003,125 @@ class WidgetPlotCoords(WidgetPlot):
                         if os.path.isfile(os.path.join(outputDir, "output_files", f))]
             self.dataFiles = [os.path.join(outputDir, "output_files", f) for f in allFiles if re.match("CoordinateList", os.path.basename(f))]
 
+class WidgetPlotLocal(WidgetPlot):
+    def __init__(self):
+        self.canvas = LocalPlotCanvas()
+        super().__init__(self.canvas)
+        self.createGridLayout()
+        self.recStart = 0
+        self.recEnd = 1
+        self.recIntervalLocal = 1
+        
+    def createGridLayout(self):
+        layout = QGridLayout()
+        interactBox = QGroupBox()
+        interactLayout = QVBoxLayout()
+        
+        self.plotSlider = QSlider(Qt.Orientation.Horizontal, self)
+        self.plotSlider.setMinimum(0)
+        self.plotSlider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        self.plotSlider.setValue(0)
+        self.sliderLabel = QLabel("day")
+        self.sliderLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.plotSlider.valueChanged.connect(self.updateSliderText)
+        
+        interactLayout.addWidget(self.runsCB)
+        interactLayout.addWidget(self.plotSlider)
+        interactLayout.addWidget(self.sliderLabel)
+        interactLayout.addWidget(self.plotBtn)
+        interactLayout.addStretch() # create a stretch of filler space between components
+        interactBox.setLayout(interactLayout)
+        
+        layout.addWidget(self.toolbar, 0, 0, 1, 5) # toolbar goes before so is placed above canvas
+        layout.addWidget(self.canvas, 1, 0, 1, 5)
+        layout.addWidget(interactBox, 1, 5, 1, 2)
+        
+        self.setLayout(layout)    
+        
+    def updateSliderText(self, value):
+        """ Updates the slider text value, by scaling back the slider value to the original value."""
+        origVal = (value * self.recIntervalLocal) + self.recStart
+        self.sliderLabel.setText(f"day {origVal}")
+        
+    def plotClick(self):
+        """Plots the function with the new selected parameters on the plot canvas."""
+        runNum = re.search(r"\d+", self.runsCB.currentText())[0]
+        coordsRgx = r"CoordinateList\d+run" + runNum
+        coordsFile = [f for f in self.coordsDataFiles if re.match(coordsRgx, os.path.basename(f))][0]
+        localRgx = r"LocalData\d+run" + runNum
+        localFile = [f for f in self.localDataFiles if re.match(localRgx, os.path.basename(f))][0]
+        self.canvas.plot(coordsFile, localFile, self.plotSlider.value())
+    
+    def findPlotFiles(self, outputDir):
+        if os.path.exists(os.path.join(outputDir, "output_files")):
+            allFiles = [f for f in os.listdir(outputDir / "output_files") 
+                        if os.path.isfile(os.path.join(outputDir, "output_files", f))]
+            self.coordsDataFiles = [os.path.join(outputDir, "output_files", f) for f in allFiles if re.match("CoordinateList", os.path.basename(f))]
+            self.localDataFiles = [os.path.join(outputDir, "output_files", f) for f in allFiles if re.match("LocalData", os.path.basename(f))]
+    
+    def updateBtns(self, outputDir):
+        self.updateRuns()
+        self.updateSlider(outputDir)
+
+    def updateRuns(self):
+        runs = []
+        for f in self.coordsDataFiles:
+            m = re.search(r"run(\d+)", f)
+            runs.append("Run "+ m.group(1))
+        self.runsCB.clear()
+        self.runsCB.addItems(runs)
+        
+    def updateSlider(self, outputDir):
+        """ 
+         Updates the slider range and scale factors according to the local data recording parameters used 
+         (in the parameters file).
+        """
+        if os.path.exists(os.path.join(outputDir, "params.txt")):
+            params = np.loadtxt(os.path.join(outputDir, "params.txt"))
+            self.recStart = int(params[28])
+            self.recEnd = int(params[29])
+            self.recIntervalLocal = int(params[31])
+            self.plotSlider.setMinimum(0) 
+            self.plotSlider.setMaximum(int((self.recEnd - self.recStart) / self.recIntervalLocal))
+            self.plotSlider.setSingleStep(1)
+            self.plotSlider.setPageStep(1) 
+            self.plotSlider.setTickInterval(1)
+            self.plotSlider.setValue(0) 
+            self.updateSliderText(0) 
+
 class PlotCanvas(FigureCanvas):
     """Creates a figure plot from a data file."""
     
-    def __init__(self, parent=None, width=5, height=4, dpi=100):
+    def __init__(self, parent=None, width=5, height=4, dpi=100, colorbar=False, annot=False):
         # tight layout makes sure the labels are not cut off in the canvas when they become bigger in replots
-        fig = Figure(figsize=(width, height), dpi=dpi, layout='tight')
-        self.axes = fig.add_subplot(111) # creates subplots
-
-        FigureCanvas.__init__(self, fig)
+        self.fig = Figure(figsize=(width, height), dpi=dpi, layout='tight')
+        self.axes = self.fig.add_subplot(111) # creates subplots
+        if colorbar:
+            mainCmap = ['aquamarine', 'mediumturquoise', 'darkcyan','steelblue', 'royalblue', 'mediumblue', 'slateblue', 'darkviolet', 'indigo', 'black']
+            allColours = ['darkgray', 'lightgreen'] + mainCmap # add colours for no-population patch and wild-population patch
+            self.cmap = mcolors.ListedColormap(allColours)
+            bounds = [-2, -1, 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+            self.cnorm = mcolors.BoundaryNorm(bounds, self.cmap.N)
+            
+            self.sm = plt.cm.ScalarMappable(cmap=self.cmap, norm=self.cnorm) # dummy scalar mappable for the colorbar
+            self.sm.set_array([])  # Set to an empty array to avoid plotting data
+            self.colorbar = self.fig.colorbar(self.sm, ax=self.axes, label='Drive allele frequency')
+            self.colorbar.ax.set_yticks([-2, -1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0], labels=['no pop', 'wild', '0.0', '0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '1.0'])
+            labels = self.colorbar.ax.get_yticklabels()
+            labels[0].set_verticalalignment('bottom') # align first label text above the tick 
+            labels[1].set_verticalalignment('bottom')
+        
+        if annot:
+            self.annotation = self.fig.text(x=0.1, y=0.97, s='t = ')
+        
+        FigureCanvas.__init__(self, self.fig)
         self.setParent(parent)
         
         FigureCanvas.setSizePolicy(self,
                 QSizePolicy.Expanding,
                 QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self) # allows figure to change size with window
-         
+ 
     def plot(self, file, *args): 
         self.axes.clear() # clears plot on the plot canvas before plotting the new curve(s)
         data = np.loadtxt(file, skiprows=2)
@@ -2090,6 +2200,48 @@ class CoordsPlotCanvas(PlotCanvas):
         self.axes.set_xlabel("x")
         self.axes.set_ylabel("y")
         self.draw() # draws the curve(s) on the canvas
+        
+class LocalPlotCanvas(PlotCanvas):
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        # have booleans so can still reuse PlotCanvas class for different cases
+        super().__init__(parent, width, height, dpi, colorbar=True, annot=True) 
+        self.scat = None
+    def plot(self, coordsFile, localFile, t=0): 
+        self.axes.clear() # clears plot on the plot canvas before plotting the new curve(s)
+        
+        ind, x, y = np.loadtxt(coordsFile, skiprows=2, unpack=True)
+        localData = np.loadtxt(localFile, skiprows=2) # get populations
+        self.simDay = int(localData[t*len(x), 0]) # get populations on one day
+        localDataDay = localData[t*len(x):((t+1)*len(x)), 2:8]
+
+        WW = localDataDay[:, 0]
+        WD = localDataDay[:, 1]
+        DD = localDataDay[:, 2]
+        WR = localDataDay[:, 3]
+        RR = localDataDay[:, 4]
+        DR = localDataDay[:, 5]
+
+        # calculate drive allele frequency for each patch
+        driveFreq = np.zeros(len(x))
+        for pat in range(0, len(x)):
+            tot = WW[pat] + WD[pat] + DD[pat] + WR[pat] + RR[pat] + DR[pat]
+            if tot == 0:
+                driveFreq[pat] = -2 # assign different distinguishable value for no-population patches
+            elif tot == WW[pat]:
+                driveFreq[pat] = -0.5
+            else:
+                driveFreq[pat] = (WD[pat] + (2*DD[pat]) + DR[pat]) / (2*tot)
+
+        # make a scatter plot with drive frequency colour map
+        self.scat = self.axes.scatter(x, y, c=driveFreq, cmap=self.cmap, norm=self.cnorm, marker='.')
+        self.annotation.set_text("t = {}".format(self.simDay))
+        self.axes.set_xlabel("x")
+        self.axes.set_ylabel("y")
+        self.axes.set_xlim(np.amin(x), np.amax(x))
+        self.axes.set_ylim(np.amin(y), np.amax(y))
+        self.draw() # draws the curve(s) on the canvas        
+        
+        return self.scat
         
 if __name__ == "__main__":
     app = QApplication.instance()
