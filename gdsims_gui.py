@@ -39,13 +39,14 @@ from PyQt5.QtWidgets import (
     QSlider
     )
 from PyQt5.QtGui import QFont, QIcon, QColor, QPalette
-from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal, QTimer
+from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal, QTimer, QSize
 from datetime import datetime
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavBar
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavBar
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import matplotlib.animation as animation
         
 basefile = Path(__file__)
 basedir = basefile.parents[0]
@@ -2011,25 +2012,59 @@ class WidgetPlotLocal(WidgetPlot):
         self.recStart = 0
         self.recEnd = 1
         self.recIntervalLocal = 1
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.updateAnim)
         
     def createGridLayout(self):
         layout = QGridLayout()
         interactBox = QGroupBox()
         interactLayout = QVBoxLayout()
         
+        line1 = QFrame()
+        line1.setFrameShape(QFrame.HLine)
+        pal = line1.palette()
+        pal.setColor(QPalette.WindowText, QColor("lightGray"))
+        line1.setPalette(pal)
+        
         self.plotSlider = QSlider(Qt.Orientation.Horizontal, self)
         self.plotSlider.setMinimum(0)
         self.plotSlider.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.plotSlider.setValue(0)
         self.sliderLabel = QLabel("day")
-        self.sliderLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.sliderLabel.setToolTip("Simulation day")
         self.plotSlider.valueChanged.connect(self.updateSliderText)
         
+        line2 = QFrame()
+        line2.setFrameShape(QFrame.HLine)
+        line2.setPalette(pal)
+        
+        pixmapi = QStyle.SP_MediaPlay
+        icon = self.style().standardIcon(pixmapi)
+        self.playBtn = QPushButton(icon, "")
+        self.playBtn.setFixedSize(65, 65)
+        self.playBtn.setIconSize(QSize(50, 50))
+        self.playBtn.clicked.connect(self.startAnim)
+        self.playBtn.setEnabled(False)
+        intervalLabel = QLabel("Interval (ms)")
+        intervalLabel.setToolTip("Animation frame interval (milliseconds)")
+        self.intervalSB = QSpinBox()
+        self.intervalSB.setMinimum(1)
+        self.intervalSB.setMaximum(10000)
+        self.intervalSB.setValue(200)
+        self.intervalSB.resize(self.intervalSB.sizeHint())
+    
         interactLayout.addWidget(self.runsCB)
+        interactLayout.addWidget(line1)
         interactLayout.addWidget(self.plotSlider)
         interactLayout.addWidget(self.sliderLabel)
         interactLayout.addWidget(self.plotBtn)
+        interactLayout.addWidget(line2)
+        interactLayout.addWidget(intervalLabel)
+        interactLayout.addWidget(self.intervalSB)
+        interactLayout.addWidget(self.playBtn)
         interactLayout.addStretch() # create a stretch of filler space between components
+        interactLayout.setAlignment(self.sliderLabel, Qt.AlignmentFlag.AlignHCenter)
+        interactLayout.setAlignment(self.playBtn, Qt.AlignmentFlag.AlignHCenter)
         interactBox.setLayout(interactLayout)
         
         layout.addWidget(self.toolbar, 0, 0, 1, 5) # toolbar goes before so is placed above canvas
@@ -2038,6 +2073,16 @@ class WidgetPlotLocal(WidgetPlot):
         
         self.setLayout(layout)    
         
+    def runStarted(self):
+         self.plotBtn.setEnabled(False)
+         self.playBtn.setEnabled(False)
+         
+    def runFinished(self, outputDir):
+        self.plotBtn.setEnabled(True)
+        self.playBtn.setEnabled(True)
+        self.findPlotFiles(outputDir)
+        self.updateBtns(outputDir)
+        
     def updateSliderText(self, value):
         """ Updates the slider text value, by scaling back the slider value to the original value."""
         origVal = (value * self.recIntervalLocal) + self.recStart
@@ -2045,13 +2090,19 @@ class WidgetPlotLocal(WidgetPlot):
         
     def plotClick(self):
         """Plots the function with the new selected parameters on the plot canvas."""
+        coordsFile, localFile = self.findCurRunFiles()
+        self.canvas.setMode('static')
+        self.canvas.plot(coordsFile, localFile, self.plotSlider.value())
+    
+    def findCurRunFiles(self):
+        """ Find data files for the current run selected. """
         runNum = re.search(r"\d+", self.runsCB.currentText())[0]
         coordsRgx = r"CoordinateList\d+run" + runNum
         coordsFile = [f for f in self.coordsDataFiles if re.match(coordsRgx, os.path.basename(f))][0]
         localRgx = r"LocalData\d+run" + runNum
         localFile = [f for f in self.localDataFiles if re.match(localRgx, os.path.basename(f))][0]
-        self.canvas.plot(coordsFile, localFile, self.plotSlider.value())
-    
+        return coordsFile, localFile
+        
     def findPlotFiles(self, outputDir):
         if os.path.exists(os.path.join(outputDir, "output_files")):
             allFiles = [f for f in os.listdir(outputDir / "output_files") 
@@ -2071,6 +2122,22 @@ class WidgetPlotLocal(WidgetPlot):
         self.runsCB.clear()
         self.runsCB.addItems(runs)
         
+    def startAnim(self):
+        """ """
+        self.curCoordsFile, self.curLocalFile = self.findCurRunFiles()
+        self.numFrames = int((self.recEnd - self.recStart) / self.recIntervalLocal)
+        self.frame = 0
+        self.interval = self.intervalSB.value()
+        self.canvas.setMode('animation')
+        self.timer.start(self.interval)  # frame interval (ms)
+        
+    def updateAnim(self):
+        if self.frame <= self.numFrames:
+            self.canvas.plot(self.curCoordsFile, self.curLocalFile, self.frame)
+            self.frame += 1
+        else:
+            self.timer.stop()
+      
     def updateSlider(self, outputDir):
         """ 
          Updates the slider range and scale factors according to the local data recording parameters used 
@@ -2094,7 +2161,7 @@ class PlotCanvas(FigureCanvas):
     
     def __init__(self, parent=None, width=5, height=4, dpi=100, colorbar=False, annot=False):
         # tight layout makes sure the labels are not cut off in the canvas when they become bigger in replots
-        self.fig = Figure(figsize=(width, height), dpi=dpi, layout='tight')
+        self.fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = self.fig.add_subplot(111) # creates subplots
         if colorbar:
             mainCmap = ['aquamarine', 'mediumturquoise', 'darkcyan','steelblue', 'royalblue', 'mediumblue', 'slateblue', 'darkviolet', 'indigo', 'black']
@@ -2102,10 +2169,10 @@ class PlotCanvas(FigureCanvas):
             self.cmap = mcolors.ListedColormap(allColours)
             bounds = [-2, -1, 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
             self.cnorm = mcolors.BoundaryNorm(bounds, self.cmap.N)
-            
             self.sm = plt.cm.ScalarMappable(cmap=self.cmap, norm=self.cnorm) # dummy scalar mappable for the colorbar
             self.sm.set_array([])  # Set to an empty array to avoid plotting data
-            self.colorbar = self.fig.colorbar(self.sm, ax=self.axes, label='Drive allele frequency')
+            self.colorbar = self.fig.colorbar(self.sm, ax=self.axes)
+            self.colorbar.set_label('Drive allele frequency', labelpad=-10) # reduce distance to colorbar label
             self.colorbar.ax.set_yticks([-2, -1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0], labels=['no pop', 'wild', '0.0', '0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '1.0'])
             labels = self.colorbar.ax.get_yticklabels()
             labels[0].set_verticalalignment('bottom') # align first label text above the tick 
@@ -2116,11 +2183,25 @@ class PlotCanvas(FigureCanvas):
         
         FigureCanvas.__init__(self, self.fig)
         self.setParent(parent)
+        self.mode = 'static'
+        self.applyLayout()
         
         FigureCanvas.setSizePolicy(self,
                 QSizePolicy.Expanding,
                 QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self) # allows figure to change size with window
+ 
+    def applyLayout(self):
+        if self.mode == 'static':
+            self.fig.set_tight_layout(True)
+        else:
+            self.fig.set_tight_layout(False)
+            self.axes.set_position([0.1, 0.1, 0.65, 0.85]) # fix axes position for animations
+            self.colorbar.ax.set_position([0.80, 0.1, 0.04, 0.85])
+
+    def setMode(self, mode):
+        self.mode = mode
+        self.applyLayout()
  
     def plot(self, file, *args): 
         self.axes.clear() # clears plot on the plot canvas before plotting the new curve(s)
