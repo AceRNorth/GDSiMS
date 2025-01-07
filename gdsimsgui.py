@@ -58,13 +58,13 @@ class MainWindow(QMainWindow):
                 QMessageBox.No, QMessageBox.No)
 
         if reply == QMessageBox.Yes: # if user says yes, the widget will close
-            event.accept()
             if self.advWindow != None:
                 self.advWindow.close()
                 self.advWindow = None
             if simRunning:
                 self.centralWidget.simRunSpace.abortSim()
-            exit()
+            event.accept()
+            #exit()
         else: # otherwise widget won't close
             event.ignore()  
             
