@@ -16,7 +16,7 @@ class Simulation(QObject):
     def __init__(self, outputPath, simName, dispType, boundaryType, rainfallFile, coordsFile, relTimesFile):
         super().__init__()
         
-        self.exeFilepath = gdsimsgui.basedir / "gdsimsapp.exe"
+        self.exeFilepath = gdsimsgui.basedir / gdsimsgui.appname
         self.outputPath = outputPath
         self.simName = simName
         

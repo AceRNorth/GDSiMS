@@ -16,6 +16,7 @@ import advwin
 
 basefile = Path(__file__)
 basedir = basefile.parents[0]
+appname = "gdsimsapp.exe"
 
 class MainWindow(QMainWindow):
     def __init__(self):
