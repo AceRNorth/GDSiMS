@@ -11,9 +11,28 @@ import os
 import gdsimsgui
 
 class Simulation(QObject):
+    """ Runs a simulation subprocess for secondary-thread execution. """
     finished = pyqtSignal()
     error = pyqtSignal(str)
     def __init__(self, outputPath, simName, dispType, boundaryType, rainfallFile, coordsFile, relTimesFile):
+        """
+        Parameters
+        ----------
+        outputPath : Path
+            Output directory path.
+        simName : string.
+            Simulation run name for output subdirectory.
+        dispType : string
+            Dispersal type for simulation. Options: "Distance kernel", "Radial".
+        boundaryType : string
+            Boundary type for simulation. Options: "Toroid", "Edge".
+        rainfallFile : string
+            Absolute filepath of the rainfall file. Can be None. 
+        coordsFile : string
+            Absolute filepath of the coordinates file. Can be None.
+        relTimesFile : string
+            Absolute filepath of the release times file. Can be None.
+        """
         super().__init__()
         
         self.exeFilepath = gdsimsgui.basedir / gdsimsgui.appname
@@ -29,6 +48,8 @@ class Simulation(QObject):
         self.process = None
     
     def run(self):
+        """ Runs the simulation. """
+        
         os.chdir(self.outputPath) # directory for output files
         paramFile = self.outputPath / "params.txt"
         inputString = "100" + "\n" + str(paramFile.resolve()) + "\n" + "y" +"\n" + "y" + "\n"
@@ -66,5 +87,6 @@ class Simulation(QObject):
             self.finished.emit()
             
     def abort(self):
+        """ Aborts the simulation. """
         if self.process:
             self.process.terminate()        

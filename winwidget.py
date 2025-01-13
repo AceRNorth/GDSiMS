@@ -11,8 +11,15 @@ import widgetrun
 import widgetplot
 
 class WindowWidget(QWidget):
+    """ Contains all section components of the main window. Manages interactions between them. """
     
     def __init__(self, advWindow): 
+        """
+        Parameters
+        ----------
+        advWindow : AdvancedWindow
+            Advanced parameter window.
+        """
         super().__init__()
         self.createGridLayout(advWindow) # creates layout to place widgets in window
         
@@ -23,7 +30,14 @@ class WindowWidget(QWidget):
         
     def createGridLayout(self, advWindow):
         # widgets
-        """Contains all widgets and sets the layout for the main window."""
+        """
+        Contains all widgets and sets the layout for the main window.
+        
+        Parameters
+        ----------
+        advWindow : AdvancedWindow
+            Advanced parameter window.
+        """
         
         self.paramSpace = widgetparams.WidgetParams(advWindow)
         self.simRunSpace = widgetrun.WidgetRun(self)
@@ -64,20 +78,56 @@ class WindowWidget(QWidget):
         self.mainBox.setLayout(layout)
         
     def createParamsFile(self, outputDir):
+        """
+        Creates a parameters file for the simulation run in the selected simulation output directory using the current UI parameter values.
+        
+        Parameters
+        ----------
+        outputDirPath : Path
+            Absolute path to the simulation output directory.
+        
+        Returns
+        -------
+        InputParams
+            Custom parameter set.
+
+        """
         customSet = self.paramSpace.createParamsFile(outputDir)
         return customSet
     
     def copyAdvFiles(self, outputDir):
+        """
+        Makes a copy of the advanced parameter files selected in the simulation output directory.
+
+        Parameters
+        ----------
+        outputDir : Path
+            Absolute path to the simulation output directory.
+
+        Returns
+        -------
+        None.
+
+        """
         self.paramSpace.copyAdvFiles(outputDir)
     
     def runStarted(self):
+        """ Makes changes to all plotspace components after a simulation run has started. """
         for plot in self.plotSpaces:
             plot.runStarted()
     
     def runFinished(self, outputDir):
+        """ Makes changes to all plotspace components after a simulation run has finished. """
         for plot in self.plotSpaces:
             plot.runFinished(outputDir)
         
     def isSimRunning(self):
+        """
+        Returns
+        -------
+        bool
+            Whether the simulation is still running.
+
+        """
         self.simRunSpace.isSimRunning()
       

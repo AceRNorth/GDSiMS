@@ -14,11 +14,14 @@ import webbrowser
 import winwidget
 import advwin
 
+# global filepaths
 basefile = Path(__file__)
 basedir = basefile.parents[0]
 appname = "gdsimsapp.exe"
 
 class MainWindow(QMainWindow):
+    """ GUI main window frame. """
+    
     def __init__(self):
         super().__init__()
         title = 'GDSiMS GUI: Gene Drive Simulator of Mosquito Spread' # window title
@@ -47,7 +50,15 @@ class MainWindow(QMainWindow):
         menu.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         
     def closeEvent(self, event):
-        """Displays a question when the user tries to close the window to ask for confirmation on closing the window."""
+        """
+        Asks for confirmation to close the window. Aborts the simulation if running. 
+
+        Parameters
+        ----------
+        event : QCloseEvent
+
+        """
+        
         simRunning = self.centralWidget.simRunSpace.isSimRunning()
         if simRunning: # gives specific warning message if sim is running
             reply = QMessageBox.question(self, "Warning", 
@@ -65,17 +76,19 @@ class MainWindow(QMainWindow):
             if simRunning:
                 self.centralWidget.simRunSpace.abortSim()
             event.accept()
-            #exit()
         else: # otherwise widget won't close
             event.ignore()  
             
     def openDocs(self):
+        """ Opens the documentation site link. """
         webbrowser.open("https://acernorth.github.io/GeneralMetapop/")
         
     def getMaxT(self):
+        """ Returns the max_t parameter of the current simulation. """
         return self.centralWidget.paramSpace.maxTSB.value()
     
     def getNumPat(self):
+        """ Returns the num_pat parameter of the current simulation. """
         return self.centralWidget.paramSpace.numPatSB.value()
         
 if __name__ == "__main__":

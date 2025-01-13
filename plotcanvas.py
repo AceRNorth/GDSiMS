@@ -13,12 +13,32 @@ from PyQt5.QtWidgets import QSizePolicy
 import numpy as np
 
 class PlotCanvas(FigureCanvas):
-    """Creates a figure plot from a data file."""
+    """Creates a plot figure. """
     
     def __init__(self, parent=None, width=5, height=4, dpi=100, colorbar=False, annot=False):
+        """
+        Parameters
+        ----------
+        parent : TYPE, optional
+            DESCRIPTION. The default is None.
+        width : float, optional
+            Figure width (inches). The default is 5.
+        height : float, optional
+            Figure height (inches). The default is 4.
+        dpi : float, optional
+            Figure dpi (resolution in dots-per-inch). The default is 100.
+        colorbar : bool, optional
+            Whether a colorbar is needed. The default is False.
+        annot : bool, optional
+            Whether a timestamp annotation is needed. The default is False.
+        """
         # tight layout makes sure the labels are not cut off in the canvas when they become bigger in replots
         self.fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = self.fig.add_subplot(111) # creates subplots
+        self.colorbar = None
+        self.annotation = None
+        
+        # for local - drive allele freq plots
         if colorbar:
             mainCmap = ['aquamarine', 'mediumturquoise', 'darkcyan','steelblue', 'royalblue', 'mediumblue', 'slateblue', 'darkviolet', 'indigo', 'black']
             allColours = ['darkgray', 'lightgreen'] + mainCmap # add colours for no-population patch and wild-population patch
@@ -26,14 +46,14 @@ class PlotCanvas(FigureCanvas):
             bounds = [-2, -1, 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
             self.cnorm = mcolors.BoundaryNorm(bounds, self.cmap.N)
             self.sm = plt.cm.ScalarMappable(cmap=self.cmap, norm=self.cnorm) # dummy scalar mappable for the colorbar
-            self.sm.set_array([])  # Set to an empty array to avoid plotting data
+            self.sm.set_array([])  # set to an empty array to avoid plotting data
             self.colorbar = self.fig.colorbar(self.sm, ax=self.axes)
             self.colorbar.set_label('Drive allele frequency', labelpad=-10) # reduce distance to colorbar label
-            self.colorbar.ax.set_yticks([-2, -1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0], labels=['no pop', 'wild', '0.0', '0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '1.0'])
+            self.colorbar.ax.set_yticks([-2, -1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+                labels=['no pop', 'wild', '0.0', '0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '1.0'])
             labels = self.colorbar.ax.get_yticklabels()
             labels[0].set_verticalalignment('bottom') # align first label text above the tick 
             labels[1].set_verticalalignment('bottom')
-        
         if annot:
             self.annotation = self.fig.text(x=0.1, y=0.97, s='t = ')
         
@@ -48,18 +68,48 @@ class PlotCanvas(FigureCanvas):
         FigureCanvas.updateGeometry(self) # allows figure to change size with window
  
     def applyLayout(self):
+        """ 
+        Sets the layout for the figure depending on the mode. 
+        """
         if self.mode == 'static':
             self.fig.set_tight_layout(True)
         else:
             self.fig.set_tight_layout(False)
             self.axes.set_position([0.1, 0.1, 0.65, 0.85]) # fix axes position for animations
-            self.colorbar.ax.set_position([0.80, 0.1, 0.04, 0.85])
+            if self.colorbar != None:
+                self.colorbar.ax.set_position([0.80, 0.1, 0.04, 0.85])
 
     def setMode(self, mode):
+        """  
+        Sets the mode of the canvas. 
+        Mode setting enables the use of the same canvas for static figures and animations. 
+        
+        Parameters
+        ----------
+        mode : string. options: "static", "animation"
+        
+        Returns
+        -------
+        None.
+
+        """
         self.mode = mode
         self.applyLayout()
  
     def plot(self, file, *args): 
+        """
+        Plots curves on the canvas from the data files.
+
+        Parameters
+        ----------
+        file : os.path for data file
+        *args : 
+
+        Returns
+        -------
+        None.
+
+        """
         self.axes.clear() # clears plot on the plot canvas before plotting the new curve(s)
         data = np.loadtxt(file, skiprows=2)
         x = data[:, 0]
@@ -72,10 +122,36 @@ class PlotCanvas(FigureCanvas):
         self.draw() # draws the curve(s) on the canvas
         
 class TotalsPlotCanvas(PlotCanvas):
+    """ Creates a plot figure of total males across the simulation area, classed by genotype. """
     def __init__(self, parent=None, width=5, height=4, dpi=100):
+        """
+        Parameters
+        ----------
+        parent : TYPE, optional
+            DESCRIPTION. The default is None.
+        width : float, optional
+            Figure width (inches). The default is 5.
+        height : float, optional
+            Figure height (inches). The default is 4.
+        dpi : float, optional
+            Figure dpi (resolution in dots-per-inch). The default is 100.
+        """
         super().__init__(parent, width, height, dpi)
          
     def plot(self, file, lines:list): # sets variables of function (have to be lists)
+        """
+        Plots the selected lines on the canvas from the data file.
+
+        Parameters
+        ----------
+        file : os.path for totals data file
+        lines : list of the selected lines
+
+        Returns
+        -------
+        None.
+        """
+    
         self.axes.clear() # clears plot on the plot canvas before plotting the new curve(s)
         totals = np.loadtxt(file, skiprows=2)
         times = totals[100:, 0] - 100 # discard first 100 days and rescale day no. for (starts from day 0)
@@ -120,14 +196,39 @@ class TotalsPlotCanvas(PlotCanvas):
      
         self.axes.set_xlabel("Day")
         self.axes.set_ylabel("Total number of individuals")
-        self.axes.legend() # creates a legend for each curve
+        self.axes.legend() 
         self.draw() # draws the curve(s) on the canvas
         
 class CoordsPlotCanvas(PlotCanvas):
+    """ Creates a plot figure of coordinate points. """
     def __init__(self, parent=None, width=5, height=4, dpi=100):
+        """
+        Parameters
+        ----------
+        parent : TYPE, optional
+            DESCRIPTION. The default is None.
+        width : float, optional
+            Figure width (inches). The default is 5.
+        height : float, optional
+            Figure height (inches). The default is 4.
+        dpi : float, optional
+            Figure dpi (resolution in dots-per-inch). The default is 100.
+        """
         super().__init__(parent, width, height, dpi)
     def plot(self, file, *args): 
-        self.axes.clear() # clears plot on the plot canvas before plotting the new curve(s)
+        """
+        Scatter plots the points from the data file.
+
+        Parameters
+        ----------
+        file : os.path for coords data file
+        *args :
+
+        Returns
+        -------
+        None.
+        """
+        self.axes.clear() 
         data = np.loadtxt(file, skiprows=2)
         x = data[:, 1]
         y = data[:, 2]
@@ -136,16 +237,42 @@ class CoordsPlotCanvas(PlotCanvas):
         self.axes.set_ylim(np.amin(y), np.amax(y))
         self.axes.set_xlabel("x")
         self.axes.set_ylabel("y")
-        self.draw() # draws the curve(s) on the canvas
+        self.draw()
+        
         
 class LocalPlotCanvas(PlotCanvas):
+    """ Creates a plot and animation figure of local male population data. """
     def __init__(self, parent=None, width=5, height=4, dpi=100):
+        """
+        Parameters
+        ----------
+        parent : TYPE, optional
+            DESCRIPTION. The default is None.
+        width : float, optional
+            Figure width (inches). The default is 5.
+        height : float, optional
+            Figure height (inches). The default is 4.
+        dpi : float, optional
+            Figure dpi (resolution in dots-per-inch). The default is 100.
+        """
         # have booleans so can still reuse PlotCanvas class for different cases
         super().__init__(parent, width, height, dpi, colorbar=True, annot=True) 
         self.scat = None
     def plot(self, coordsFile, localFile, t=0): 
-        self.axes.clear() # clears plot on the plot canvas before plotting the new curve(s)
-        
+        """
+        Scatter plots the points from the coords data file with a color map of the drive allele frequency.
+
+        Parameters
+        ----------
+        coordsFile : os.path for coords data file
+        localFile : os.path for local data file
+        t : int, timestep (starting from 0, index of data row on local file)
+
+        Returns
+        -------
+        scat : matplotlib.collections.PathCollection (scatter points)
+        """
+        self.axes.clear() 
         ind, x, y = np.loadtxt(coordsFile, skiprows=2, unpack=True)
         localData = np.loadtxt(localFile, skiprows=2) # get populations
         self.simDay = int(localData[t*len(x), 0]) # get populations on one day
@@ -176,6 +303,6 @@ class LocalPlotCanvas(PlotCanvas):
         self.axes.set_ylabel("y")
         self.axes.set_xlim(np.amin(x), np.amax(x))
         self.axes.set_ylim(np.amin(y), np.amax(y))
-        self.draw() # draws the curve(s) on the canvas        
+        self.draw()      
         
         return self.scat

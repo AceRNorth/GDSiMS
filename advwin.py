@@ -11,11 +11,56 @@ from PyQt5.QtCore import Qt
 from pathlib import Path
 import numpy as np
 import re
-import params
+
+class AdvParams():
+    """UI component values for the advanced parameters window. """
+    setLabel = 1
+    recIntervalGlobal = 1
+    recStart = 0
+    recEnd = 1000
+    recIntervalLocal = 200
+    recSitesFreq = 1
+    muJ = 0.05
+    muA = 0.125
+    beta = 100
+    theta = 9
+    compPower = 0.066666667
+    minDev = 10
+    dispRate = 0.01
+    maxDisp = 0.2
+    dispType = "Radial"
+    aestivation = False
+    psi = 0
+    muAes = 0
+    tHide1 = 0
+    tHide2 = 0
+    tWake1 = 0
+    tWake2 = 0
+    alpha0Mean = 100000
+    alpha0Var = 0 
+    alpha1 = 0
+    amp = 0
+    rainfallFile = False
+    rainfallFilename = ""
+    resp = 0
+    boundaryType = "Toroid"
+    patchCoordsFile = False
+    patchCoordsFilename = ""
+    gamma = 0.025
+    relTimesFile = False
+    relTimesFilename = ""
+       
 
 class AdvancedWindow(QDialog):
+    """ Contains the simulation's advanced parameter UI components and applies the changes. """
     
     def __init__(self, parentWin):
+        """
+        Parameters
+        ----------
+        parentWin : MainWindow
+            Parent window.
+        """
         super().__init__()
         self.title = 'Advanced parameters' 
         self.left = 600
@@ -26,14 +71,15 @@ class AdvancedWindow(QDialog):
         self.setWindowFlags(self.windowFlags() ^ Qt.WindowContextHelpButtonHint) # removes window help button
         self.parentWindow = parentWin
         
-        self.lastVals = params.AdvParams()
+        self.lastVals = AdvParams()
         self.rainfallFile = None
         self.coordsFile = None
         self.relTimesFile = None
     
         self.initUI()    
         
-    def initUI(self):    
+    def initUI(self):  
+        """ Initialises the UI. """
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height) # sets position and size of window
     
@@ -44,7 +90,7 @@ class AdvancedWindow(QDialog):
         self.openWin()
         
     def openWin(self):
-        #self.applyBtn.setEnabled(False) # ?
+        """ Opens the window if closed and moves it to the top layer. """
         self.show()
         self.activateWindow() # moves the window to the top
         self.saveValues() # save starting values in case need to reset when close window without saving
@@ -52,6 +98,14 @@ class AdvancedWindow(QDialog):
         self.okBtn.setAutoDefault(True)
         
     def closeEvent(self, event):
+        """ 
+        Closes the window without applying the most recent changes. 
+        Resets the parameter boxes to the last values applied.
+        
+        Parameters
+        ----------
+        event : QCloseEvent
+        """
         self.hide()
     
         # reset all values to their defaults
@@ -95,7 +149,7 @@ class AdvancedWindow(QDialog):
         event.ignore()
         
     def saveValues(self):
-        """ Save last applied changes to values for update of UI components and parameter values on run. """
+        """ Saves the last applied changes to UI parameter box values/states. """
         self.lastVals.setLabel = self.setLabelSB.value()
         self.lastVals.recIntervalGlobal = self.recIntervalGlobalSB.value()
         self.lastVals.recStart = self.recStartSB.value()
@@ -139,10 +193,16 @@ class AdvancedWindow(QDialog):
         self.relTimesFile = self.lastVals.relTimesFilename
     
     def getParams(self):
+        """
+        Returns
+        -------
+        AdvParams()
+            Last saved UI parameter box values/states.
+
+        """
         return self.lastVals
     
     def createGridLayout(self):
-        # widgets
         """Contains all widgets and sets the layout for the advanced parameters window."""
         self.horizontalGroupBox = QGroupBox()
         self.layout = QGridLayout()
@@ -607,6 +667,7 @@ class AdvancedWindow(QDialog):
         self.horizontalGroupBox.setLayout(self.layout)
         
     def boundaryTypeState(self):
+        """  Shows/hides extra UI components depending on the boundary type selected. """
         self.coordsFileCheckbox.setChecked(False)
         if self.boundaryTypeCB.currentText() == "Toroid":
             self.coordsFileLabel.hide()
@@ -617,6 +678,29 @@ class AdvancedWindow(QDialog):
             self.coordsFileCheckbox.show()
         
     def checkboxState(self, checkBox, showLabelElements, showNumElements=[], showTextElements=[], hideLabelElements=[], hideNumElements=[]):
+        """
+        Shows or hides UI components depending on the state of the checkbox. 
+
+        Parameters
+        ----------
+        checkBox : QCheckBox
+        
+        showLabelElements : list:QLabel
+            Label elements to show when checkbox is checked.
+        showNumElements : list:QSpinBox, optional
+            Number-based box elements to show when checkbox is checked. The default is [].
+        showTextElements : list:QLineEdit, optional
+            Text edit elements to show when checkbox is checked. The default is [].
+        hideLabelElements : list:QLabel, optional
+            Label elements to hide when checkbox is checked. The default is [].
+        hideNumElements : list:QSpinBox, optional
+            Number-based box elements to hide when checkbox is checked. The default is [].
+
+        Returns
+        -------
+        None.
+
+        """
         if checkBox.isChecked():
             for l in showLabelElements:
                 l.show()
@@ -645,13 +729,38 @@ class AdvancedWindow(QDialog):
                 l.show()
         
     def openFileDialog(self, filename, filenameEdit):
-        """ Opens a file dialog box to select a file, saves the filename and updates the Edit box text with the filename. """
+        """
+        Opens a file dialog box to select a file, saves the filename and updates the text edit box with the filename. 
+
+        Parameters
+        ----------
+        filename : Path
+            Variable to save the absolute filepath to.
+        filenameEdit : QLineEdit
+            Text edit box to update.
+
+        Returns
+        -------
+        None.
+
+        """
         fname, ok = QFileDialog.getOpenFileName(self, "Select a file", ".", "Text files (*.txt)")
         if fname:
             filename = Path(fname)
             filenameEdit.setText(str(filename))
             
     def validParams(self):
+        """
+        Checks the validity of parameters. Checks for interval errors and file value errors, if advanced parameter files have been provided.
+
+        Returns
+        -------
+        isValid : bool
+            Whether all the parameters are valid.
+        errMsgs : list:string
+            Error messages.
+
+        """
         errs = 0 
         errMsgs = []
         maxT = self.parentWindow.getMaxT()
@@ -750,10 +859,25 @@ class AdvancedWindow(QDialog):
         return (isValid, errMsgs)   
         
     def enableApply(self):
+        """ Enables the apply button. """
         if self.applyBtn.isEnabled() == False:
             self.applyBtn.setEnabled(True)
         
     def applyChanges(self, btn):
+        """
+        Apply and save changes to parameter values with dialog button if values are valid. Otherwise, show error message.
+        If the dialog button is OK, also close window.
+
+        Parameters
+        ----------
+        btn : str
+            Type of dialog button. Options: "ok", "apply"
+
+        Returns
+        -------
+        None.
+
+        """
         # only apply changes if pass bound and other checks  
         isValid, errMsgs = self.validParams()
         if isValid:

@@ -14,9 +14,14 @@ import sim
 import gdsimsgui
 
 class WidgetRun(QWidget):
-    """ Creates a widget to run the simulation. """
+    """ Contains UI components for running and tracking a simulation. """
     
     def __init__(self, winWidget):
+        """
+        Parameters
+        ----------
+        winWidget : WindowWidget
+        """
         super().__init__()
         self.winWidget = winWidget 
         self.simulation = None
@@ -24,6 +29,7 @@ class WidgetRun(QWidget):
         self.initUI()
         
     def initUI(self):
+        """ Creates the UI components and places them. """
         outputDirLabel = QLabel("Output directory")
         outputDirLabel.setToolTip("Output files directory")
         self.outputDirNameEdit = QLineEdit("")
@@ -75,6 +81,7 @@ class WidgetRun(QWidget):
             dirNameEdit.setText(str(outputDirName))    
             
     def runSim(self):
+        """ Sets up the simulation run on a separate thread."""
         validDir = self.createOutputDir(self.outputDirNameEdit.text(), self.simNameEdit.text())
         if validDir:
             self.progBar.setValue(0)
@@ -117,14 +124,33 @@ class WidgetRun(QWidget):
             # self.timer.start(1000)  # Check for new output every 1 second
         
     def abortSim(self):
+       """ Aborts the simulation run. """
        if self.simulation:
            self.abortCode = 1
            self.simulation.abort()
            self.thread.quit()
            self.thread.wait()
-           print("Aborting sim")
         
     def createOutputDir(self, dirPath, simName):
+        """
+        Creates a new directory for the simulation files in the selected directory path.
+        If a simulation name is specified (not blank), the directory will have this name.
+        Otherwise, a date-time stamp will be given.
+        If the parent directory path is not given (blank), the parent directory will be taken as the base directory of the GUI file.
+
+        Parameters
+        ----------
+        dirPath : string
+            Absolute filepath for the parent directory of the simulation files.
+        simName : string
+            Name for the new subdirectory.
+
+        Returns
+        -------
+        isValidDir : bool
+            Whether the parent directory filepath is a valid directory.
+
+        """
         isValidDir = False
         if Path(dirPath).is_dir() or dirPath == "":
             if dirPath == "":
@@ -150,6 +176,19 @@ class WidgetRun(QWidget):
         return isValidDir
         
     def runFinished(self, abortCode):
+        """
+        Updates UI upon finish of the simulation run.
+
+        Parameters
+        ----------
+        abortCode : int
+            Non-zero abort code means most recent simulation aborted.
+
+        Returns
+        -------
+        None.
+
+        """
         # Re-enable the button
         #self.timer.stop()
         self.abortBtn.setEnabled(False)
@@ -167,12 +206,33 @@ class WidgetRun(QWidget):
         self.simulation = None
         
     def runError(self, errorMsg):
+        """
+        Aborts the simulation and displays the error message.
+
+        Parameters
+        ----------
+        errorMsg : string
+            Collection of concatenated error messages from the simulation.
+
+        Returns
+        -------
+        None.
+
+        """
         # Stop the timer and show the error
         #self.timer.stop()
         QMessageBox.critical(self, "Error", errorMsg)
         self.abortSim()
         
     def isSimRunning(self):
+        """
+
+        Returns
+        -------
+        bool
+            Whether the simulation is still running.
+
+        """
         if self.simulation != None:
             return True
         else:

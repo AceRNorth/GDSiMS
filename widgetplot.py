@@ -15,14 +15,21 @@ import numpy as np
 import plotcanvas
 
 class WidgetPlot(QWidget): # widget containing plotcanvas and toolbar in same place
-    """Creates a widget for the plotspace and plot interaction components."""
+    """Contains the plotspace and plot interaction components."""
     
     def __init__(self, canvas):
+        """
+        Parameters
+        ----------
+        canvas : PlotCanvas
+            The associated plot canvas.
+        """
         QWidget.__init__(self)
         self.canvas = canvas
         self.baseInitUI()
     
     def baseInitUI(self):
+        """ Creates base plot interaction UI components. """
         self.toolbar = NavBar(self.canvas)
         self.runsCB = QComboBox()
         self.plotBtn = QPushButton("Plot")
@@ -31,27 +38,49 @@ class WidgetPlot(QWidget): # widget containing plotcanvas and toolbar in same pl
         self.plotBtn.clicked.connect(self.plotClick)
         
     def createGridLayout(self):
-        """ """
+        """ Places UI components on a grid layout. """
     
     def plotClick(self):
-        """Plots the function with the new selected parameters on the plot canvas."""
+        """Plots (or re-plots) the curves or points on the canvas. """
         
     def runStarted(self):
+        """ Makes changes to the UI components after a simulation run has started. """
         self.plotBtn.setEnabled(False)
         
     def runFinished(self, outputDir):
+        """
+        Makes changes to the UI components after a simulation run has finished. 
+        
+        Parameters
+        ----------
+        outputDir : Path for output file directory
+        """
         self.plotBtn.setEnabled(True)
         self.findPlotFiles(outputDir)
         self.updateBtns(outputDir)
         
     def findPlotFiles(self, outputDir):
+        """  
+        Finds relevant data files to plot in the output directory.
+        
+        Parameters
+        ----------
+        outputDir : Path for output file directory
+        """
         self.dataFiles = []
     
     def updateBtns(self, outputDir):
-        """ Updates UI buttons in the interaction box for runs just made."""
+        """ 
+        Updates UI buttons in the interaction box for runs just made.
+        
+        Parameters
+        ----------
+        outputDir : Path for output file directory
+        """
         self.updateRuns()
     
     def updateRuns(self):
+        """ Updates the UI text for runs available from available data files. """
         runs = []
         for f in self.dataFiles:
             m = re.search(r"run(\d+)", f)
@@ -60,7 +89,7 @@ class WidgetPlot(QWidget): # widget containing plotcanvas and toolbar in same pl
         self.runsCB.addItems(runs)
 
 class WidgetPlotTotals(WidgetPlot):
-    """Creates a widget for the plotspace and plot interaction components."""
+    """Creates a widget for the plotspace and plot interaction components of the total males plot."""
     
     def __init__(self):
         self.canvas = plotcanvas.TotalsPlotCanvas()
@@ -69,7 +98,8 @@ class WidgetPlotTotals(WidgetPlot):
         self.createGridLayout()
     
     def totalsInitUI(self):
-        """ """
+        """ Creates UI components specific to a totals plot."""
+        
         self.allCheckbox = QCheckBox("All\ngenotypes")
         self.allCheckbox.setToolTip("WW + WD + DD + WR + RR + DR")
         self.allCheckbox.resize(self.allCheckbox.sizeHint())
@@ -111,6 +141,8 @@ class WidgetPlotTotals(WidgetPlot):
         self.mDRcheckbox.setChecked(True) 
         
     def createGridLayout(self):
+        """ Places UI components on a grid layout. """
+        
         layout = QGridLayout()
         interactBox = QGroupBox()
         interactLayout = QVBoxLayout()
@@ -157,26 +189,36 @@ class WidgetPlotTotals(WidgetPlot):
         return lines
     
     def plotClick(self):
-        """Plots the function with the new selected parameters on the plot canvas."""
+        """ Plots (or re-plots) the curves on the canvas. """
+        
         runNum = re.search(r"\d+", self.runsCB.currentText())[0]
         rgx = r"Totals\d+run" + runNum
         plotFile = [f for f in self.dataFiles if re.match(rgx, os.path.basename(f))][0]
         self.canvas.plot(plotFile, self.checkboxState())
 
     def findPlotFiles(self, outputDir):
+        """  
+        Finds relevant data files to plot in the output directory.
+        
+        Parameters
+        ----------
+        outputDir : Path for output file directory
+        """
         if os.path.exists(os.path.join(outputDir, "output_files")):
             allFiles = [f for f in os.listdir(outputDir / "output_files") 
                         if os.path.isfile(os.path.join(outputDir, "output_files", f))]
             self.dataFiles = [os.path.join(outputDir, "output_files", f) for f in allFiles if re.match("Totals", os.path.basename(f))]
 
 class WidgetPlotCoords(WidgetPlot):
-    """Creates a widget for the plotspace and plot interaction components."""
+    """Creates a widget for the plotspace and plot interaction components of the coordinates plot."""
     def __init__(self):
         self.canvas = plotcanvas.CoordsPlotCanvas()
         super().__init__(self.canvas)
         self.createGridLayout()
         
     def createGridLayout(self):
+        """ Places UI components on a grid layout. """
+        
         layout = QGridLayout()
         interactBox = QGroupBox()
         interactLayout = QVBoxLayout()
@@ -193,19 +235,27 @@ class WidgetPlotCoords(WidgetPlot):
         self.setLayout(layout)    
         
     def plotClick(self):
-        """Plots the function with the new selected parameters on the plot canvas."""
+        """ Plots (or re-plots) the points on the canvas. """
         runNum = re.search(r"\d+", self.runsCB.currentText())[0]
         rgx = r"CoordinateList\d+run" + runNum
         plotFile = [f for f in self.dataFiles if re.match(rgx, os.path.basename(f))][0]
         self.canvas.plot(plotFile)
 
     def findPlotFiles(self, outputDir):
+        """  
+        Finds relevant data files to plot in the output directory.
+        
+        Parameters
+        ----------
+        outputDir : Path for output file directory
+        """
         if os.path.exists(os.path.join(outputDir, "output_files")):
             allFiles = [f for f in os.listdir(outputDir / "output_files") 
                         if os.path.isfile(os.path.join(outputDir, "output_files", f))]
             self.dataFiles = [os.path.join(outputDir, "output_files", f) for f in allFiles if re.match("CoordinateList", os.path.basename(f))]
 
 class WidgetPlotLocal(WidgetPlot):
+    """ Creates a widget for the plotspace and plot interaction components of the local males plot."""
     def __init__(self):
         self.canvas = plotcanvas.LocalPlotCanvas()
         super().__init__(self.canvas)
@@ -217,6 +267,8 @@ class WidgetPlotLocal(WidgetPlot):
         self.timer.timeout.connect(self.updateAnim)
         
     def createGridLayout(self):
+        """ Places UI components on a grid layout. """
+        
         layout = QGridLayout()
         interactBox = QGroupBox()
         interactLayout = QVBoxLayout()
@@ -285,12 +337,12 @@ class WidgetPlotLocal(WidgetPlot):
         self.updateBtns(outputDir)
         
     def updateSliderText(self, value):
-        """ Updates the slider text value, by scaling back the slider value to the original value."""
-        origVal = (value * self.recIntervalLocal) + self.recStart
+        """ Updates the slider text value."""
+        origVal = (value * self.recIntervalLocal) + self.recStart # scale back the slider value to the original value
         self.sliderLabel.setText(f"day {origVal}")
         
     def plotClick(self):
-        """Plots the function with the new selected parameters on the plot canvas."""
+        """ Plots (or re-plots) the points on the canvas. """
         coordsFile, localFile = self.findCurRunFiles()
         self.canvas.setMode('static')
         self.canvas.plot(coordsFile, localFile, self.plotSlider.value())
@@ -305,6 +357,13 @@ class WidgetPlotLocal(WidgetPlot):
         return coordsFile, localFile
         
     def findPlotFiles(self, outputDir):
+        """  
+        Finds relevant data files to plot in the output directory.
+        
+        Parameters
+        ----------
+        outputDir : Path for output file directory
+        """
         if os.path.exists(os.path.join(outputDir, "output_files")):
             allFiles = [f for f in os.listdir(outputDir / "output_files") 
                         if os.path.isfile(os.path.join(outputDir, "output_files", f))]
@@ -312,10 +371,18 @@ class WidgetPlotLocal(WidgetPlot):
             self.localDataFiles = [os.path.join(outputDir, "output_files", f) for f in allFiles if re.match("LocalData", os.path.basename(f))]
     
     def updateBtns(self, outputDir):
+        """ 
+        Updates UI buttons in the interaction box for runs just made.
+        
+        Parameters
+        ----------
+        outputDir : Path for output file directory
+        """
         self.updateRuns()
         self.updateSlider(outputDir)
 
     def updateRuns(self):
+        """ Updates the UI text for runs available from available data files. """
         runs = []
         for f in self.coordsDataFiles:
             m = re.search(r"run(\d+)", f)
@@ -324,7 +391,7 @@ class WidgetPlotLocal(WidgetPlot):
         self.runsCB.addItems(runs)
         
     def startAnim(self):
-        """ """
+        """ Starts playing the animation. """
         self.curCoordsFile, self.curLocalFile = self.findCurRunFiles()
         self.numFrames = int((self.recEnd - self.recStart) / self.recIntervalLocal)
         self.frame = 0
@@ -333,6 +400,7 @@ class WidgetPlotLocal(WidgetPlot):
         self.timer.start(self.interval)  # frame interval (ms)
         
     def updateAnim(self):
+        """ Updates the animation snapshot displayed. """
         if self.frame <= self.numFrames:
             self.canvas.plot(self.curCoordsFile, self.curLocalFile, self.frame)
             self.frame += 1
@@ -341,8 +409,11 @@ class WidgetPlotLocal(WidgetPlot):
       
     def updateSlider(self, outputDir):
         """ 
-         Updates the slider range and scale factors according to the local data recording parameters used 
-         (in the parameters file).
+         Updates the slider range and scale factors for the most recent simulation run.  
+         
+         Parameters
+         ----------
+         outputDir : Path for output file directory
         """
         if os.path.exists(os.path.join(outputDir, "params.txt")):
             params = np.loadtxt(os.path.join(outputDir, "params.txt"))

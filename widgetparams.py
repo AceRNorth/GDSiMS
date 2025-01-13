@@ -12,7 +12,14 @@ import shutil
 import params
 
 class WidgetParams(QWidget):
+    """ Contains simulation parameter UI components. """
     def __init__(self, advWindow):
+        """
+        Parameters
+        ----------
+        advWindow : AdvancedWindow
+            Advanced parameter window.
+        """
         super().__init__()
         self.advWindow = advWindow
         self.advWindow.hide()
@@ -23,6 +30,7 @@ class WidgetParams(QWidget):
         self.initParamSets()
         
     def initUI(self): 
+        """ Creates the UI components and places them. """
         setsLabel = QLabel("Load a parameter set or choose your own parameters:")
         setsCB = QComboBox()
         setsCB.addItems([
@@ -160,6 +168,8 @@ class WidgetParams(QWidget):
         self.layout().addWidget(advancedBtn, 19, 0)
       
     def initParamSets(self):
+        """ Initialises the pre-defined parameter sets. """
+        # set 1 - default
         set1 = params.InputParams(
                 numRuns = 1, 
                 maxT = 1000,
@@ -201,7 +211,7 @@ class WidgetParams(QWidget):
                 coordsFile = None,
                 relTimesFile = None
                 )
-        
+        # set 2 - low fitness cost
         set2 = params.InputParams(
                 numRuns = 1, 
                 maxT = 1000,
@@ -243,7 +253,7 @@ class WidgetParams(QWidget):
                 coordsFile = None,
                 relTimesFile = None
                 )
-        
+        # set 3 - high fitness cost
         set3 = params.InputParams(
                 numRuns = 1, 
                 maxT = 1000,
@@ -285,7 +295,7 @@ class WidgetParams(QWidget):
                 coordsFile = None,
                 relTimesFile = None
                 )
-        
+        # set 4 - high number of release sites
         set4 = params.InputParams(
                 numRuns = 1, 
                 maxT = 1000,
@@ -327,7 +337,7 @@ class WidgetParams(QWidget):
                 coordsFile = None,
                 relTimesFile = None
                 )
-        
+        # set 5 - low dispersal rate
         set5 = params.InputParams(
                 numRuns = 1, 
                 maxT = 1000,
@@ -369,7 +379,7 @@ class WidgetParams(QWidget):
                 coordsFile = None,
                 relTimesFile = None
                 )
-        
+        # set 6 - high dispersal rate
         set6 = params.InputParams(
                 numRuns = 1, 
                 maxT = 1000,
@@ -415,6 +425,19 @@ class WidgetParams(QWidget):
         self.sets = [set1, set2, set3, set4, set5, set6] 
         
     def loadSet(self, setIndex):
+        """
+        Update the UI parameter box values with those from the parameter set selected on all windows.
+
+        Parameters
+        ----------
+        setIndex : int
+            Parameter set index (respective to sets attribute).
+
+        Returns
+        -------
+        None.
+
+        """
         # clear previous box options
         self.advWindow.aesCheckbox.setChecked(False)
         self.advWindow.rainfallFileCheckbox.setChecked(False)
@@ -478,13 +501,24 @@ class WidgetParams(QWidget):
         self.advWindow.saveValues()
         
     def openAdvanced(self):
-        """ Opens a new window for advanced parameters."""
+        """ Opens the advanced parameters window."""
         self.advWindow.openWin()
         
-    def checkBounds(self):
-        self.advWindow.checkBounds()
-        
     def createParamsFile(self, outputDirPath):
+        """
+        Creates a parameters file for the simulation run in the selected simulation output directory using the current UI parameter values.
+
+        Parameters
+        ----------
+        outputDirPath : Path
+            Absolute path to the simulation output directory.
+
+        Returns
+        -------
+        InputParams
+            Custom parameter set.
+
+        """
         advParams = self.advWindow.getParams()
         self.customSet = params.InputParams(
                             numRuns = self.numRunsSB.value(), 
@@ -570,6 +604,19 @@ class WidgetParams(QWidget):
         return self.customSet
     
     def copyAdvFiles(self, outputDir):
+        """
+        Makes a copy of the advanced parameter files selected in the simulation output directory.
+
+        Parameters
+        ----------
+        outputDir : Path
+            Absolute path to the simulation output directory.
+
+        Returns
+        -------
+        None.
+
+        """
         if self.customSet.rainfallFile != None:
             shutil.copy(self.customSet.rainfallFile, os.path.join(outputDir, "rainfall.txt"))
         if self.customSet.coordsFile != None:
