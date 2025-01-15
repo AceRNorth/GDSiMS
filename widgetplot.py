@@ -88,11 +88,11 @@ class WidgetPlot(QWidget): # widget containing plotcanvas and toolbar in same pl
         self.runsCB.clear()
         self.runsCB.addItems(runs)
 
-class WidgetPlotTotals(WidgetPlot):
-    """Creates a widget for the plotspace and plot interaction components of the total males plot."""
+class WidgetPlotTotalsGen(WidgetPlot):
+    """Creates a widget for the plotspace and plot interaction components of the total males (by genotype) plot."""
     
     def __init__(self):
-        self.canvas = plotcanvas.TotalsPlotCanvas()
+        self.canvas = plotcanvas.TotalsGenPlotCanvas()
         super().__init__(self.canvas)
         self.totalsInitUI()
         self.createGridLayout()

@@ -121,7 +121,7 @@ class PlotCanvas(FigureCanvas):
         self.axes.legend() # creates a legend for each curve
         self.draw() # draws the curve(s) on the canvas
         
-class TotalsPlotCanvas(PlotCanvas):
+class TotalsGenPlotCanvas(PlotCanvas):
     """ Creates a plot figure of total males across the simulation area, classed by genotype. """
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         """

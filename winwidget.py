@@ -42,11 +42,11 @@ class WindowWidget(QWidget):
         self.paramSpace = widgetparams.WidgetParams(advWindow)
         self.simRunSpace = widgetrun.WidgetRun(self)
         plotTabs = QTabWidget(self)
-        self.totalsPlotSpace = widgetplot.WidgetPlotTotals()
+        self.totalsGenPlotSpace = widgetplot.WidgetPlotTotalsGen()
         self.coordsPlotSpace = widgetplot.WidgetPlotCoords()
         self.localPlotSpace = widgetplot.WidgetPlotLocal()
-        self.plotSpaces = [self.totalsPlotSpace, self.coordsPlotSpace, self.localPlotSpace]
-        plotTabs.addTab(self.totalsPlotSpace, "Totals")
+        self.plotSpaces = [self.totalsGenPlotSpace, self.coordsPlotSpace, self.localPlotSpace]
+        plotTabs.addTab(self.totalsGenPlotSpace, "Totals - Genotype")
         plotTabs.addTab(self.coordsPlotSpace, "Coords")
         plotTabs.addTab(self.localPlotSpace, "Local - Drive allele freq.")
         
