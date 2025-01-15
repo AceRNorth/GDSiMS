@@ -41,7 +41,7 @@ class PlotCanvas(FigureCanvas):
         # for local - drive allele freq plots
         if colorbar:
             mainCmap = ['aquamarine', 'mediumturquoise', 'darkcyan','steelblue', 'royalblue', 'mediumblue', 'slateblue', 'darkviolet', 'indigo', 'black']
-            allColours = ['darkgray', 'lightgreen'] + mainCmap # add colours for no-population patch and wild-population patch
+            allColours = ['darkgray', 'lightsalmon'] + mainCmap # add colours for no-population patch and wild-population patch
             self.cmap = mcolors.ListedColormap(allColours)
             bounds = [-2, -1, 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
             self.cnorm = mcolors.BoundaryNorm(bounds, self.cmap.N)
