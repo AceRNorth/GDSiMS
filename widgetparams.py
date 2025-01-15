@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QComboBox, QPushButton
 from PyQt5.QtGui import QPalette, QColor
 import os
 import shutil
+import numpy as np
 import params
 
 class WidgetParams(QWidget):
@@ -202,7 +203,7 @@ class WidgetParams(QWidget):
                 recStart = 0,
                 recEnd = 1000,
                 recIntervalGlobal = 1,
-                recIntervalLocal = 200,
+                recIntervalLocal = 365,
                 recSitesFreq = 1,
                 setLabel = 1,
                 dispType = "Radial",
@@ -244,7 +245,7 @@ class WidgetParams(QWidget):
                 recStart = 0,
                 recEnd = 1000,
                 recIntervalGlobal = 1,
-                recIntervalLocal = 200,
+                recIntervalLocal = 365,
                 recSitesFreq = 1,
                 setLabel = 2,
                 dispType = "Radial",
@@ -286,7 +287,7 @@ class WidgetParams(QWidget):
                 recStart = 0,
                 recEnd = 1000,
                 recIntervalGlobal = 1,
-                recIntervalLocal = 200,
+                recIntervalLocal = 365,
                 recSitesFreq = 1,
                 setLabel = 3,
                 dispType = "Radial",
@@ -328,7 +329,7 @@ class WidgetParams(QWidget):
                 recStart = 0,
                 recEnd = 1000,
                 recIntervalGlobal = 1,
-                recIntervalLocal = 200,
+                recIntervalLocal = 365,
                 recSitesFreq = 1,
                 setLabel = 4,
                 dispType = "Radial",
@@ -370,7 +371,7 @@ class WidgetParams(QWidget):
                 recStart = 0,
                 recEnd = 1000,
                 recIntervalGlobal = 1,
-                recIntervalLocal = 200,
+                recIntervalLocal = 365,
                 recSitesFreq = 1,
                 setLabel = 5,
                 dispType = "Radial",
@@ -412,7 +413,7 @@ class WidgetParams(QWidget):
                 recStart = 0,
                 recEnd = 1000,
                 recIntervalGlobal = 1,
-                recIntervalLocal = 200,
+                recIntervalLocal = 365,
                 recSitesFreq = 1,
                 setLabel = 6,
                 dispType = "Radial",
@@ -504,6 +505,34 @@ class WidgetParams(QWidget):
         """ Opens the advanced parameters window."""
         self.advWindow.openWin()
         
+    def createScaledRelTimesFile(self, outputDirPath, relTimesFile):
+        """
+        Creates a scaled version of the release times file, with values + 365 (to take into account internal discarding of first year of data).
+        This file will be used by the simulation.
+
+        Parameters
+        ----------
+        outputDirPath : Path
+            Absolute path to the simulation output directory.
+        relTimesFile : str
+            Absolute filepath to user's release times file.
+
+        Returns
+        -------
+        filePath : str
+            Absolute filepath to the scaled release times file.
+
+        """
+        filePath = outputDirPath / "reltimes.txt"
+        relTimes = np.loadtxt(relTimesFile, dtype=int)
+        relTimes = relTimes + 365
+        
+        with open(filePath, "w") as file:
+            for t in relTimes:
+                file.write(str(t) + "\n")
+                
+        return str(filePath)
+        
     def createParamsFile(self, outputDirPath):
         """
         Creates a parameters file for the simulation run in the selected simulation output directory using the current UI parameter values.
@@ -520,9 +549,11 @@ class WidgetParams(QWidget):
 
         """
         advParams = self.advWindow.getParams()
+        if advParams.relTimesFile == True:
+            sRelTimesFile = self.createScaledRelTimesFile(outputDirPath, self.advWindow.relTimesFile)
         self.customSet = params.InputParams(
                             numRuns = self.numRunsSB.value(), 
-                            maxT = self.maxTSB.value(),
+                            maxT = self.maxTSB.value() + 365,
                             numPat = self.numPatSB.value(),
                             muJ = advParams.muJ,
                             muA = advParams.muA,
@@ -533,24 +564,24 @@ class WidgetParams(QWidget):
                             gamma = advParams.gamma,
                             xi = self.xiSB.value(),
                             e = self.eSB.value(),
-                            driverStart = self.driverStartSB.value(),
+                            driverStart = self.driverStartSB.value() + 365,
                             numDriverM = self.numDriverMSB.value(),
                             numDriverSites = self.numDriverSitesSB.value(),
                             dispRate = advParams.dispRate,
                             maxDisp = advParams.maxDisp,
                             psi = advParams.psi,
                             muAes = advParams.muAes,
-                            tHide1 = advParams.tHide1,
-                            tHide2 = advParams.tHide2,
-                            tWake1 = advParams.tWake1,
+                            tHide1 = advParams.tHide1 + 365,
+                            tHide2 = advParams.tHide2 + 365,
+                            tWake1 = advParams.tWake1 ,
                             tWake2 = advParams.tWake2,
                             alpha0Mean = advParams.alpha0Mean,
                             alpha0Variance = advParams.alpha0Var,
                             alpha1 = advParams.alpha1,
                             amp = advParams.amp,
                             resp = advParams.resp,
-                            recStart = advParams.recStart,
-                            recEnd = advParams.recEnd,
+                            recStart = advParams.recStart + 365,
+                            recEnd = advParams.recEnd + 365,
                             recIntervalGlobal = advParams.recIntervalGlobal,
                             recIntervalLocal = advParams.recIntervalLocal,
                             recSitesFreq = advParams.recSitesFreq,
@@ -559,7 +590,7 @@ class WidgetParams(QWidget):
                             boundaryType = self.advWindow.boundaryType,
                             rainfallFile = None if advParams.rainfallFile == False else self.advWindow.rainfallFile,
                             coordsFile = None if advParams.patchCoordsFile == False else self.advWindow.coordsFile,
-                            relTimesFile = None if advParams.relTimesFile == False else self.advWindow.relTimesFile
+                            relTimesFile = None if advParams.relTimesFile == False else sRelTimesFile
                         )
     
         
@@ -621,6 +652,4 @@ class WidgetParams(QWidget):
             shutil.copy(self.customSet.rainfallFile, os.path.join(outputDir, "rainfall.txt"))
         if self.customSet.coordsFile != None:
             shutil.copy(self.customSet.coordsFile, os.path.join(outputDir, "coords.txt"))
-        if self.customSet.relTimesFile != None:
-            shutil.copy(self.customSet.relTimesFile, os.path.join(outputDir, "reltimes.txt"))
       

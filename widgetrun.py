@@ -157,7 +157,7 @@ class WidgetRun(QWidget):
                 dirPath = gdsimsgui.basedir
             
             if simName != "":
-                self.outputPath = dirPath / simName
+                self.outputPath = Path(dirPath) / Path(simName)
             else:
                 dt = datetime.now()
                 simName = str(dt.year) + "_" + str(dt.month) + "_" + str(dt.day)

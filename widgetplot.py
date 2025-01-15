@@ -345,7 +345,7 @@ class WidgetPlotLocal(WidgetPlot):
         """ Plots (or re-plots) the points on the canvas. """
         coordsFile, localFile = self.findCurRunFiles()
         self.canvas.setMode('static')
-        self.canvas.plot(coordsFile, localFile, self.plotSlider.value())
+        self.canvas.plot(coordsFile, localFile, self.plotSlider.value(), self.recStart)
     
     def findCurRunFiles(self):
         """ Find data files for the current run selected. """
@@ -402,7 +402,7 @@ class WidgetPlotLocal(WidgetPlot):
     def updateAnim(self):
         """ Updates the animation snapshot displayed. """
         if self.frame <= self.numFrames:
-            self.canvas.plot(self.curCoordsFile, self.curLocalFile, self.frame)
+            self.canvas.plot(self.curCoordsFile, self.curLocalFile, self.frame, self.recStart)
             self.frame += 1
         else:
             self.timer.stop()
@@ -417,11 +417,14 @@ class WidgetPlotLocal(WidgetPlot):
         """
         if os.path.exists(os.path.join(outputDir, "params.txt")):
             params = np.loadtxt(os.path.join(outputDir, "params.txt"))
-            self.recStart = int(params[28])
-            self.recEnd = int(params[29])
+            self.recStart = int(params[28]) - 365
+            self.recEnd = int(params[29]) - 365
             self.recIntervalLocal = int(params[31])
-            self.plotSlider.setMinimum(0) 
+            self.plotSlider.setMinimum(self.recStart) 
+            #print("Slider's recStart:", self.recStart)
+            #print("Slider's recEnd:", self.recEnd)
             self.plotSlider.setMaximum(int((self.recEnd - self.recStart) / self.recIntervalLocal))
+            #print("Slider's max:", self.recEnd)
             self.plotSlider.setSingleStep(1)
             self.plotSlider.setPageStep(1) 
             self.plotSlider.setTickInterval(1)

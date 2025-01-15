@@ -18,7 +18,7 @@ class AdvParams():
     recIntervalGlobal = 1
     recStart = 0
     recEnd = 1000
-    recIntervalLocal = 200
+    recIntervalLocal = 365
     recSitesFreq = 1
     muJ = 0.05
     muA = 0.125
@@ -247,7 +247,7 @@ class AdvancedWindow(QDialog):
         self.recIntervalLocalSB = QSpinBox()
         self.recIntervalLocalSB.setMinimum(1)
         self.recIntervalLocalSB.setMaximum(100000)
-        self.recIntervalLocalSB.setValue(200)
+        self.recIntervalLocalSB.setValue(365)
         self.recIntervalLocalSB.setSingleStep(100)
         self.recIntervalLocalSB.resize(self.recIntervalLocalSB.sizeHint())
         self.recIntervalLocalSB.valueChanged.connect(self.enableApply)
@@ -846,7 +846,7 @@ class AdvancedWindow(QDialog):
                 
         # give warnings but still allow the values - no errors thrown
         if self.aesCheckbox.isChecked():
-            if (self.t_hide1SB.value() > maxT) or (self.t_hide2SB.value() > maxT) or (self.tWake1SB.value() > maxT) or (self.tWake2SB.value() > maxT):
+            if (self.tHide1SB.value() > maxT) or (self.tHide2SB.value() > maxT) or (self.tWake1SB.value() > maxT) or (self.tWake2SB.value() > maxT):
                 errMsgs.append("The aestivation interval times are larger than max_t.\nThe simulation will only run partly through the aestivation period.")
         if self.recStartSB.value() > maxT:
             errMsgs.append("rec_start > max_t. This simulation will not include local recording.")

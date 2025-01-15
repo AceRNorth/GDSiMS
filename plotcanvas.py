@@ -154,8 +154,8 @@ class TotalsPlotCanvas(PlotCanvas):
     
         self.axes.clear() # clears plot on the plot canvas before plotting the new curve(s)
         totals = np.loadtxt(file, skiprows=2)
-        times = totals[100:, 0] - 100 # discard first 100 days and rescale day no. for (starts from day 0)
-        total_males = totals[100:, 1:]
+        times = totals[365:, 0] - 365 # discard first 365 days and rescale day no. for (starts from day 0)
+        total_males = totals[365:, 1:]
         for line in lines:  # keep same colours for same type of line
             lbl = ""
             col = "mediumturquoise"
@@ -258,7 +258,7 @@ class LocalPlotCanvas(PlotCanvas):
         # have booleans so can still reuse PlotCanvas class for different cases
         super().__init__(parent, width, height, dpi, colorbar=True, annot=True) 
         self.scat = None
-    def plot(self, coordsFile, localFile, t=0): 
+    def plot(self, coordsFile, localFile, t, recStart): 
         """
         Scatter plots the points from the coords data file with a color map of the drive allele frequency.
 
@@ -267,6 +267,7 @@ class LocalPlotCanvas(PlotCanvas):
         coordsFile : os.path for coords data file
         localFile : os.path for local data file
         t : int, timestep (starting from 0, index of data row on local file)
+        recStart: int, start time for recording local data
 
         Returns
         -------
@@ -274,9 +275,16 @@ class LocalPlotCanvas(PlotCanvas):
         """
         self.axes.clear() 
         ind, x, y = np.loadtxt(coordsFile, skiprows=2, unpack=True)
-        localData = np.loadtxt(localFile, skiprows=2) # get populations
-        self.simDay = int(localData[t*len(x), 0]) # get populations on one day
-        localDataDay = localData[t*len(x):((t+1)*len(x)), 2:8]
+        numRecPats = len(x) # number of recorded patches in one day  --  num_pat / rec_sites_freq ??
+        #print("t:", t)
+        #print("numRecPats:", numRecPats)
+        localData = np.loadtxt(localFile, skiprows=2) # get populations 
+        recIntervalLocal = int(localData[2*numRecPats, 0]) - int(localData[1*numRecPats, 0])
+        #print("Local data:", localData)
+        #localData = localData[365:, :] # slicing from 365th row allows old timestep indexing going forwards
+        self.simDay = int(localData[(t+1)*numRecPats, 0]) # get populations on one day, t+1 because always ignore initialisation day
+        #print("simDay:", self.simDay)
+        localDataDay = localData[t*numRecPats:((t+2)*numRecPats), 2:8]
 
         WW = localDataDay[:, 0]
         WD = localDataDay[:, 1]
@@ -286,8 +294,8 @@ class LocalPlotCanvas(PlotCanvas):
         DR = localDataDay[:, 5]
 
         # calculate drive allele frequency for each patch
-        driveFreq = np.zeros(len(x))
-        for pat in range(0, len(x)):
+        driveFreq = np.zeros(numRecPats)
+        for pat in range(0, numRecPats):
             tot = WW[pat] + WD[pat] + DD[pat] + WR[pat] + RR[pat] + DR[pat]
             if tot == 0:
                 driveFreq[pat] = -2 # assign different distinguishable value for no-population patches
@@ -298,7 +306,8 @@ class LocalPlotCanvas(PlotCanvas):
 
         # make a scatter plot with drive frequency colour map
         self.scat = self.axes.scatter(x, y, c=driveFreq, cmap=self.cmap, norm=self.cnorm, marker='.')
-        self.annotation.set_text("t = {}".format(self.simDay))
+        # discarded days have already not been locally recorded (due to internal rescaling of recStart) but still need to rescale sim day value
+        self.annotation.set_text("t = {}".format((t * recIntervalLocal) + recStart))
         self.axes.set_xlabel("x")
         self.axes.set_ylabel("y")
         self.axes.set_xlim(np.amin(x), np.amax(x))
