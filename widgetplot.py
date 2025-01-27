@@ -88,7 +88,54 @@ class WidgetPlot(QWidget): # widget containing plotcanvas and toolbar in same pl
         self.runsCB.clear()
         self.runsCB.addItems(runs)
 
-class WidgetPlotTotalsGen(WidgetPlot):
+
+class WidgetPlotTotals(WidgetPlot):
+    """Creates a widget for the plotspace and plot interaction components of a totals plot."""
+    
+    def __init__(self, canvas):
+        """
+        Parameters
+        ----------
+        canvas : PlotCanvas
+        """
+        super().__init__(canvas)
+        
+    def totalsInitUI(self):
+         """ Creates UI components specific to a totals plot."""
+         
+    def createGridLayout(self):
+        """ Places UI components on a grid layout. """
+        
+    def checkboxState(self):
+        """Returns a list of indices to be plotted depending on the checkboxes that are checked."""
+        lines=[]
+        return lines
+    
+    def plotClick(self):
+        """ Plots (or re-plots) the curves on the canvas. """
+        
+        runNum = re.search(r"\d+", self.runsCB.currentText())[0]
+        rgx = r"Totals\d+run" + runNum
+        plotFile = [f for f in self.dataFiles if re.match(rgx, os.path.basename(f))][0]
+        self.canvas.plot(plotFile, self.checkboxState())
+
+    def findPlotFiles(self, outputDir):
+        """  
+        Finds relevant data files to plot in the output directory.
+        
+        Parameters
+        ----------
+        outputDir : Path for output file directory
+        """
+        if os.path.exists(os.path.join(outputDir, "output_files")):
+            allFiles = [f for f in os.listdir(outputDir / "output_files") 
+                        if os.path.isfile(os.path.join(outputDir, "output_files", f))]
+            self.dataFiles = [os.path.join(outputDir, "output_files", f) for f in allFiles if re.match("Totals", os.path.basename(f))]
+
+        
+
+
+class WidgetPlotTotalsGen(WidgetPlotTotals):
     """Creates a widget for the plotspace and plot interaction components of the total males (by genotype) plot."""
     
     def __init__(self):
@@ -98,7 +145,7 @@ class WidgetPlotTotalsGen(WidgetPlot):
         self.createGridLayout()
     
     def totalsInitUI(self):
-        """ Creates UI components specific to a totals plot."""
+        """ Creates UI components specific to a totals - genotype plot."""
         
         self.allCheckbox = QCheckBox("All\ngenotypes")
         self.allCheckbox.setToolTip("WW + WD + DD + WR + RR + DR")
@@ -188,26 +235,66 @@ class WidgetPlotTotalsGen(WidgetPlot):
             lines.append(7)
         return lines
     
-    def plotClick(self):
-        """ Plots (or re-plots) the curves on the canvas. """
+class WidgetPlotTotalsAllele(WidgetPlotTotals):
+    """Creates a widget for the plotspace and plot interaction components of the total males (by allele frequency) plot."""
+    
+    def __init__(self):
+        self.canvas = plotcanvas.TotalsAllelePlotCanvas()
+        super().__init__(self.canvas)
+        self.totalsInitUI()
+        self.createGridLayout()
+    
+    def totalsInitUI(self):
+        """ Creates UI components specific to a totals - allele frequency plot."""
         
-        runNum = re.search(r"\d+", self.runsCB.currentText())[0]
-        rgx = r"Totals\d+run" + runNum
-        plotFile = [f for f in self.dataFiles if re.match(rgx, os.path.basename(f))][0]
-        self.canvas.plot(plotFile, self.checkboxState())
-
-    def findPlotFiles(self, outputDir):
-        """  
-        Finds relevant data files to plot in the output directory.
+        self.wCheckbox = QCheckBox("Wild")
+        self.wCheckbox.setToolTip("Wild type allele frequency")
+        self.wCheckbox.resize(self.wCheckbox.sizeHint())
+        self.wCheckbox.setChecked(True)
         
-        Parameters
-        ----------
-        outputDir : Path for output file directory
-        """
-        if os.path.exists(os.path.join(outputDir, "output_files")):
-            allFiles = [f for f in os.listdir(outputDir / "output_files") 
-                        if os.path.isfile(os.path.join(outputDir, "output_files", f))]
-            self.dataFiles = [os.path.join(outputDir, "output_files", f) for f in allFiles if re.match("Totals", os.path.basename(f))]
+        self.dCheckbox = QCheckBox("Drive")
+        self.dCheckbox.setToolTip("Gene drive allele frequency")
+        self.dCheckbox.resize(self.dCheckbox.sizeHint())
+        self.dCheckbox.setChecked(True)
+        
+        self.rCheckbox = QCheckBox("Resistance")
+        self.rCheckbox.setToolTip("r2 resistance allele frequency")
+        self.rCheckbox.resize(self.rCheckbox.sizeHint())
+        self.rCheckbox.setChecked(True) 
+        
+    def createGridLayout(self):
+        """ Places UI components on a grid layout. """
+        
+        layout = QGridLayout()
+        interactBox = QGroupBox()
+        interactLayout = QVBoxLayout()
+        
+        interactLayout.addWidget(self.runsCB)
+        interactLayout.addWidget(self.wCheckbox)
+        interactLayout.addWidget(self.dCheckbox)
+        interactLayout.addWidget(self.rCheckbox)
+        interactLayout.addWidget(self.plotBtn)
+        interactLayout.addStretch() # create a stretch of filler space between components
+        interactBox.setLayout(interactLayout)
+        
+        layout.addWidget(self.toolbar, 0, 0, 1, 5) # toolbar goes before so is placed above canvas
+        layout.addWidget(self.canvas, 1, 0, 1, 5)
+        layout.addWidget(interactBox, 1, 5, 1, 1)
+        
+        self.setLayout(layout)
+        
+    def checkboxState(self):
+        """Returns a list of indices to be plotted depending on the checkboxes that are checked."""
+        lines=[]
+        
+        if self.wCheckbox.isChecked() == True:
+            lines.append(0)
+        if self.dCheckbox.isChecked() == True:
+            lines.append(1)
+        if self.rCheckbox.isChecked() == True:
+            lines.append(2)
+        return lines
+        
 
 class WidgetPlotCoords(WidgetPlot):
     """Creates a widget for the plotspace and plot interaction components of the coordinates plot."""

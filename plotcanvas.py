@@ -199,6 +199,94 @@ class TotalsGenPlotCanvas(PlotCanvas):
         self.axes.legend() 
         self.draw() # draws the curve(s) on the canvas
         
+        
+class TotalsAllelePlotCanvas(PlotCanvas):
+    """ Creates a plot figure of total males across the simulation area, classed by genotype. """
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        """
+        Parameters
+        ----------
+        parent : TYPE, optional
+            DESCRIPTION. The default is None.
+        width : float, optional
+            Figure width (inches). The default is 5.
+        height : float, optional
+            Figure height (inches). The default is 4.
+        dpi : float, optional
+            Figure dpi (resolution in dots-per-inch). The default is 100.
+        """
+        super().__init__(parent, width, height, dpi)
+         
+    def plot(self, file, lines:list): # sets variables of function (have to be lists)
+        """
+        Plots the selected lines on the canvas from the data file.
+
+        Parameters
+        ----------
+        file : os.path for totals data file
+        lines : list of the selected lines
+
+        Returns
+        -------
+        None.
+        """
+    
+        self.axes.clear() # clears plot on the plot canvas before plotting the new curve(s)
+        totals = np.loadtxt(file, skiprows=2)
+        times = totals[365:, 0] - 365 # discard first 365 days and rescale day no. for (starts from day 0)
+        total_males = totals[365:, 1:]
+        WW = total_males[:, 0]
+        WD = total_males[:, 1]
+        DD = total_males[:, 2]
+        WR = total_males[:, 3]
+        RR = total_males[:, 4]
+        DR = total_males[:, 5]
+        
+        for line in lines:  # keep same colours for same type of line
+            lbl = ""
+            col = "mediumturquoise"
+            
+            if line == 0:
+                lbl = "wild"
+                col = "hotpink"
+            elif line == 1:
+                lbl = "drive"
+                col = "royalblue"
+            elif line == 2:
+                lbl = "r2 (non-functional) resistance"
+                col = "rebeccapurple"
+            
+            y = []
+            for i in range(0, len(WW)):
+                bottom = WW[i] + WD[i] + DD[i] + WR[i] + RR[i] + DR[i]
+                if line == 0:
+                    top = WW[i] + WD[i] + WR[i]
+                    if bottom == 0:
+                        result = 0
+                    else:
+                        result = top / bottom
+                    y.append(result)
+                if line == 1:
+                    top = WD[i] + DD[i] + DR[i]
+                    if bottom == 0:
+                        result = 0
+                    else:
+                        result = top / bottom
+                    y.append(result)
+                if line == 2:
+                    top = WR[i] + RR[i] + DR[i]
+                    if bottom == 0:
+                        result = 0
+                    else:
+                        result = top / bottom
+                    y.append(result)
+            self.axes.plot(times, y, label=lbl, color=col) 
+     
+        self.axes.set_xlabel("Day")
+        self.axes.set_ylabel("Allele frequency")
+        self.axes.legend() 
+        self.draw() # draws the curve(s) on the canvas        
+        
 class CoordsPlotCanvas(PlotCanvas):
     """ Creates a plot figure of coordinate points. """
     def __init__(self, parent=None, width=5, height=4, dpi=100):
