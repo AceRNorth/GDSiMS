@@ -200,7 +200,7 @@ class WidgetParams(QWidget):
                 alpha1 = 0.0,
                 amp = 0.0,
                 resp = 0.0,
-                recStart = 0,
+                recStart = 200,
                 recEnd = 1000,
                 recIntervalGlobal = 1,
                 recIntervalLocal = 365,
@@ -242,7 +242,7 @@ class WidgetParams(QWidget):
                 alpha1 = 0.0,
                 amp = 0.0,
                 resp = 0.0,
-                recStart = 0,
+                recStart = 200,
                 recEnd = 1000,
                 recIntervalGlobal = 1,
                 recIntervalLocal = 365,
@@ -284,7 +284,7 @@ class WidgetParams(QWidget):
                 alpha1 = 0.0,
                 amp = 0.0,
                 resp = 0.0,
-                recStart = 0,
+                recStart = 200,
                 recEnd = 1000,
                 recIntervalGlobal = 1,
                 recIntervalLocal = 365,
@@ -326,7 +326,7 @@ class WidgetParams(QWidget):
                 alpha1 = 0.0,
                 amp = 0.0,
                 resp = 0.0,
-                recStart = 0,
+                recStart = 200,
                 recEnd = 1000,
                 recIntervalGlobal = 1,
                 recIntervalLocal = 365,
@@ -368,7 +368,7 @@ class WidgetParams(QWidget):
                 alpha1 = 0.0,
                 amp = 0.0,
                 resp = 0.0,
-                recStart = 0,
+                recStart = 200,
                 recEnd = 1000,
                 recIntervalGlobal = 1,
                 recIntervalLocal = 365,
@@ -410,7 +410,7 @@ class WidgetParams(QWidget):
                 alpha1 = 0.0,
                 amp = 0.0,
                 resp = 0.0,
-                recStart = 0,
+                recStart = 200,
                 recEnd = 1000,
                 recIntervalGlobal = 1,
                 recIntervalLocal = 365,
@@ -468,11 +468,7 @@ class WidgetParams(QWidget):
         self.numDriverMSB.setValue(self.sets[setIndex].numDriverM)
         self.numDriverSitesSB.setValue(self.sets[setIndex].numDriverSites)
         self.advWindow.setLabelSB.setValue(self.sets[setIndex].setLabel)
-        self.advWindow.recIntervalGlobalSB.setValue(self.sets[setIndex].recIntervalGlobal)
-        self.advWindow.recStartSB.setValue(self.sets[setIndex].recStart)
-        self.advWindow.recEndSB.setValue(self.sets[setIndex].recEnd)
         self.advWindow.recIntervalLocalSB.setValue(self.sets[setIndex].recIntervalLocal)
-        self.advWindow.recSitesFreqSB.setValue(self.sets[setIndex].recSitesFreq)
         self.advWindow.muJSB.setValue(self.sets[setIndex].muJ)
         self.advWindow.muASB.setValue(self.sets[setIndex].muA)
         self.advWindow.betaSB.setValue(self.sets[setIndex].beta)
@@ -571,20 +567,20 @@ class WidgetParams(QWidget):
                             maxDisp = advParams.maxDisp,
                             psi = advParams.psi,
                             muAes = advParams.muAes,
-                            tHide1 = advParams.tHide1 + 365,
-                            tHide2 = advParams.tHide2 + 365,
-                            tWake1 = advParams.tWake1 ,
+                            tHide1 = advParams.tHide1,
+                            tHide2 = advParams.tHide2,
+                            tWake1 = advParams.tWake1,
                             tWake2 = advParams.tWake2,
                             alpha0Mean = advParams.alpha0Mean,
                             alpha0Variance = advParams.alpha0Var,
                             alpha1 = advParams.alpha1,
                             amp = advParams.amp,
                             resp = advParams.resp,
-                            recStart = advParams.recStart + 365,
-                            recEnd = advParams.recEnd + 365,
-                            recIntervalGlobal = advParams.recIntervalGlobal,
+                            recStart = self.driverStartSB.value() + 365,
+                            recEnd = self.maxTSB.value() + 365,
+                            recIntervalGlobal = 1,
                             recIntervalLocal = advParams.recIntervalLocal,
-                            recSitesFreq = advParams.recSitesFreq,
+                            recSitesFreq = 1,
                             setLabel = advParams.setLabel,
                             dispType = self.advWindow.dispType,
                             boundaryType = self.advWindow.boundaryType,

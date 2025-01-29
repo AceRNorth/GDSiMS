@@ -15,11 +15,7 @@ import re
 class AdvParams():
     """UI component values for the advanced parameters window. """
     setLabel = 1
-    recIntervalGlobal = 1
-    recStart = 0
-    recEnd = 1000
     recIntervalLocal = 365
-    recSitesFreq = 1
     muJ = 0.05
     muA = 0.125
     beta = 100
@@ -50,7 +46,6 @@ class AdvParams():
     relTimesFile = False
     relTimesFilename = ""
        
-
 class AdvancedWindow(QDialog):
     """ Contains the simulation's advanced parameter UI components and applies the changes. """
     
@@ -110,11 +105,7 @@ class AdvancedWindow(QDialog):
     
         # reset all values to their defaults
         self.setLabelSB.setValue(self.lastVals.setLabel)
-        self.recIntervalGlobalSB.setValue(self.lastVals.recIntervalGlobal)
-        self.recStartSB.setValue(self.lastVals.recStart)
-        self.recEndSB.setValue(self.lastVals.recEnd)
         self.recIntervalLocalSB.setValue(self.lastVals.recIntervalLocal)
-        self.recSitesFreqSB.setValue(self.lastVals.recSitesFreq)
         self.muJSB.setValue(self.lastVals.muJ)
         self.muASB.setValue(self.lastVals.muA)
         self.betaSB.setValue(self.lastVals.beta)
@@ -151,11 +142,7 @@ class AdvancedWindow(QDialog):
     def saveValues(self):
         """ Saves the last applied changes to UI parameter box values/states. """
         self.lastVals.setLabel = self.setLabelSB.value()
-        self.lastVals.recIntervalGlobal = self.recIntervalGlobalSB.value()
-        self.lastVals.recStart = self.recStartSB.value()
-        self.lastVals.recEnd = self.recEndSB.value()
         self.lastVals.recIntervalLocal = self.recIntervalLocalSB.value()
-        self.lastVals.recSitesFreq = self.recSitesFreqSB.value()
         self.lastVals.muJ = self.muJSB.value()
         self.lastVals.muA = self.muASB.value()
         self.lastVals.beta = self.betaSB.value()
@@ -215,33 +202,6 @@ class AdvancedWindow(QDialog):
         self.setLabelSB.setValue(1)
         self.setLabelSB.resize(self.setLabelSB.sizeHint())
         self.setLabelSB.valueChanged.connect(self.enableApply)
-        recIntervalGlobalLabel = QLabel("rec_interval_global")
-        recIntervalGlobalLabel.setToolTip("Time interval for global data recording/output.")
-        self.recIntervalGlobalSB = QSpinBox()
-        self.recIntervalGlobalSB.setMinimum(1)
-        self.recIntervalGlobalSB.setMaximum(100000)
-        self.recIntervalGlobalSB.setValue(1)
-        self.recIntervalGlobalSB.setSingleStep(100)
-        self.recIntervalGlobalSB.resize(self.recIntervalGlobalSB.sizeHint())
-        self.recIntervalGlobalSB.valueChanged.connect(self.enableApply)
-        recStartLabel = QLabel("rec_start")
-        recStartLabel.setToolTip("Start time for the data recording window (inclusive).")
-        self.recStartSB = QSpinBox()
-        self.recStartSB.setMinimum(0)
-        self.recStartSB.setMaximum(100000)
-        self.recStartSB.setValue(0)
-        self.recStartSB.setSingleStep(100)
-        self.recStartSB.resize(self.recStartSB.sizeHint())
-        self.recStartSB.valueChanged.connect(self.enableApply)
-        recEndLabel = QLabel("rec_end")
-        recEndLabel.setToolTip("End time for the data recording window (inclusive).")
-        self.recEndSB = QSpinBox()
-        self.recEndSB.setMinimum(0) # should be rec_start
-        self.recEndSB.setMaximum(100000)
-        self.recEndSB.setValue(1000)
-        self.recEndSB.setSingleStep(100)
-        self.recEndSB.resize(self.recEndSB.sizeHint())
-        self.recEndSB.valueChanged.connect(self.enableApply)
         recIntervalLocalLabel = QLabel("rec_interval_local")
         recIntervalLocalLabel.setToolTip("Time interval at which to collect/record local data (in days).")
         self.recIntervalLocalSB = QSpinBox()
@@ -251,15 +211,6 @@ class AdvancedWindow(QDialog):
         self.recIntervalLocalSB.setSingleStep(100)
         self.recIntervalLocalSB.resize(self.recIntervalLocalSB.sizeHint())
         self.recIntervalLocalSB.valueChanged.connect(self.enableApply)
-        recSitesFreqLabel = QLabel("rec_sites_freq")
-        recSitesFreqLabel.setToolTip("Fraction of sites to collect local data for (1 is all sites, 10 is 1 in 10 etc).")
-        self.recSitesFreqSB = QSpinBox()
-        self.recSitesFreqSB.setValue(1)
-        self.recSitesFreqSB.setMinimum(1)
-        self.recSitesFreqSB.setMaximum(100000)
-        self.recSitesFreqSB.setSingleStep(5)
-        self.recSitesFreqSB.resize(self.recSitesFreqSB.sizeHint())
-        self.recSitesFreqSB.valueChanged.connect(self.enableApply)
         
         line1 = QFrame()
         line1.setFrameShape(QFrame.HLine)
@@ -579,16 +530,8 @@ class AdvancedWindow(QDialog):
         self.layout.addWidget(recTitle, 0, 0)
         self.layout.addWidget(setLabelLabel, 1, 0)
         self.layout.addWidget(self.setLabelSB, 1, 1)
-        self.layout.addWidget(recIntervalGlobalLabel, 1, 2)
-        self.layout.addWidget(self.recIntervalGlobalSB, 1, 3)
-        self.layout.addWidget(recStartLabel, 2, 0)
-        self.layout.addWidget(self.recStartSB, 2, 1)
-        self.layout.addWidget(recEndLabel, 2, 2)
-        self.layout.addWidget(self.recEndSB, 2, 3)
-        self.layout.addWidget(recIntervalLocalLabel, 2, 4)
-        self.layout.addWidget(self.recIntervalLocalSB, 2, 5)
-        self.layout.addWidget(recSitesFreqLabel, 2, 6)
-        self.layout.addWidget(self.recSitesFreqSB, 2, 7)
+        self.layout.addWidget(recIntervalLocalLabel, 1, 2)
+        self.layout.addWidget(self.recIntervalLocalSB, 1, 3)
         self.layout.addWidget(line1, 4, 0, 1, 8)
         self.layout.addWidget(lifeTitle, 5, 0)
         self.layout.addWidget(muJLabel, 6, 0)
@@ -765,9 +708,7 @@ class AdvancedWindow(QDialog):
         errMsgs = []
         maxT = self.parentWindow.getMaxT()
         numPat = self.parentWindow.getNumPat()
-        if self.recEndSB.value() < self.recStartSB.value():
-            errs += 1
-            errMsgs.append("rec_end must be equal to or larger than rec_start.")
+
         if self.aesCheckbox.isChecked():
             if self.tHide2SB.value() < self.tHide1SB.value():
                 errs += 1
@@ -848,11 +789,7 @@ class AdvancedWindow(QDialog):
         if self.aesCheckbox.isChecked():
             if (self.tHide1SB.value() > maxT) or (self.tHide2SB.value() > maxT) or (self.tWake1SB.value() > maxT) or (self.tWake2SB.value() > maxT):
                 errMsgs.append("The aestivation interval times are larger than max_t.\nThe simulation will only run partly through the aestivation period.")
-        if self.recStartSB.value() > maxT:
-            errMsgs.append("rec_start > max_t. This simulation will not include local recording.")
-        if (maxT - self.recIntervalLocalSB.value() - self.recStartSB.value()) < 0:
-            errMsgs.append("The interval between rec_start and max_t is larger than rec_interval_local.\nThe simulation will only record local data for day 0.")
-            
+
         isValid = True
         if errs != 0:
             isValid = False
