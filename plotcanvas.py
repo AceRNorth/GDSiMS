@@ -346,15 +346,26 @@ class LocalPlotCanvas(PlotCanvas):
         # have booleans so can still reuse PlotCanvas class for different cases
         super().__init__(parent, width, height, dpi, colorbar=True, annot=True) 
         self.scat = None
-    def plot(self, coordsFile, localFile, t, recStart): 
+        
+    def getFig(self):
+        """
+        Returns
+        -------
+        matplotlib.Figure
+            Figure object for the plot.
+
+        """
+        return self.fig
+        
+    def plot(self, t, coordsFile, localFile, recStart): 
         """
         Scatter plots the points from the coords data file with a color map of the drive allele frequency.
 
         Parameters
         ----------
+        t : int, timestep (starting from 0, index of data row on local file)
         coordsFile : os.path for coords data file
         localFile : os.path for local data file
-        t : int, timestep (starting from 0, index of data row on local file)
         recStart: int, start time for recording local data
 
         Returns
@@ -400,6 +411,7 @@ class LocalPlotCanvas(PlotCanvas):
         self.axes.set_ylabel("y")
         self.axes.set_xlim(np.amin(x), np.amax(x))
         self.axes.set_ylim(np.amin(y), np.amax(y))
+        self.axes.minorticks_on() # need it for animation saving to work
         self.draw()      
         
         return self.scat

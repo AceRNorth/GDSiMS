@@ -5,14 +5,16 @@ Created on Mon Jan  6 14:03:49 2025
 @author: biol0117
 """
 
-from PyQt5.QtWidgets import QWidget, QComboBox, QPushButton, QCheckBox, QGridLayout, QVBoxLayout, QGroupBox, QFrame, QSlider, QLabel, QStyle, QSpinBox
-from PyQt5.QtCore import Qt, QTimer, QSize
+from PyQt5.QtWidgets import QWidget, QComboBox, QPushButton, QCheckBox, QGridLayout, QVBoxLayout, QGroupBox, QFrame, QSlider, QLabel, QStyle, QSpinBox, QFileDialog, QMessageBox
+from PyQt5.QtCore import Qt, QTimer, QSize, QThread
 from PyQt5.QtGui import QColor, QPalette
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavBar
 import os
 import re
 import numpy as np
 import plotcanvas
+import gdsimsgui
+from animsaver import AnimSaver
 
 class WidgetPlot(QWidget): # widget containing plotcanvas and toolbar in same place
     """Contains the plotspace and plot interaction components."""
@@ -343,7 +345,14 @@ class WidgetPlotCoords(WidgetPlot):
 
 class WidgetPlotLocal(WidgetPlot):
     """ Creates a widget for the plotspace and plot interaction components of the local males plot."""
-    def __init__(self):
+    def __init__(self, parent):
+        """
+        Parameters
+        ----------
+        parent : WindowWidget
+            For event managing calls.
+        """
+        self.parent = parent
         self.canvas = plotcanvas.LocalPlotCanvas()
         super().__init__(self.canvas)
         self.createGridLayout()
@@ -392,6 +401,10 @@ class WidgetPlotLocal(WidgetPlot):
         self.intervalSB.setMaximum(10000)
         self.intervalSB.setValue(200)
         self.intervalSB.resize(self.intervalSB.sizeHint())
+        self.saveBtn = QPushButton("Save")
+        self.saveBtn.setMinimumHeight(40)
+        self.saveBtn.setEnabled(False)
+        self.saveBtn.clicked.connect(self.saveAnim)
     
         interactLayout.addWidget(self.runsCB)
         interactLayout.addWidget(line1)
@@ -402,9 +415,11 @@ class WidgetPlotLocal(WidgetPlot):
         interactLayout.addWidget(intervalLabel)
         interactLayout.addWidget(self.intervalSB)
         interactLayout.addWidget(self.playBtn)
+        interactLayout.addWidget(self.saveBtn)
         interactLayout.addStretch() # create a stretch of filler space between components
         interactLayout.setAlignment(self.sliderLabel, Qt.AlignmentFlag.AlignHCenter)
         interactLayout.setAlignment(self.playBtn, Qt.AlignmentFlag.AlignHCenter)
+        interactLayout.setAlignment(self.saveBtn, Qt.AlignmentFlag.AlignHCenter)
         interactBox.setLayout(interactLayout)
         
         layout.addWidget(self.toolbar, 0, 0, 1, 5) # toolbar goes before so is placed above canvas
@@ -416,10 +431,12 @@ class WidgetPlotLocal(WidgetPlot):
     def runStarted(self):
          self.plotBtn.setEnabled(False)
          self.playBtn.setEnabled(False)
+         self.saveBtn.setEnabled(False)
          
     def runFinished(self, outputDir):
         self.plotBtn.setEnabled(True)
         self.playBtn.setEnabled(True)
+        self.saveBtn.setEnabled(True)
         self.findPlotFiles(outputDir)
         self.updateBtns(outputDir)
         
@@ -432,7 +449,7 @@ class WidgetPlotLocal(WidgetPlot):
         """ Plots (or re-plots) the points on the canvas. """
         coordsFile, localFile = self.findCurRunFiles()
         self.canvas.setMode('static')
-        self.canvas.plot(coordsFile, localFile, self.plotSlider.value(), self.recStart)
+        self.canvas.plot(self.plotSlider.value(), coordsFile, localFile, self.recStart)
     
     def findCurRunFiles(self):
         """ Find data files for the current run selected. """
@@ -489,11 +506,40 @@ class WidgetPlotLocal(WidgetPlot):
     def updateAnim(self):
         """ Updates the animation snapshot displayed. """
         if self.frame <= self.numFrames:
-            self.canvas.plot(self.curCoordsFile, self.curLocalFile, self.frame, self.recStart)
+            self.canvas.plot(self.frame, self.curCoordsFile, self.curLocalFile, self.recStart)
             self.frame += 1
         else:
             self.timer.stop()
-      
+            
+    def saveAnim(self):
+        """ Saves the animation as a file on a separate thread. """
+        fname, filt = QFileDialog.getSaveFileName(self, "Save animation", str(gdsimsgui.basedir), "*.gif")
+        fig = self.canvas.getFig()
+        numFrames = (int((self.recEnd - self.recStart) / self.recIntervalLocal)) + 1 # +1 because range(frames) used in FuncAnimation
+        interval = self.intervalSB.value()
+        
+        # Disable run button and start thread to save animation
+        self.parent.saveAnimStarted()
+        self.thread = QThread()
+        self.animf = AnimSaver(fname, fig, self.canvas.plot, numFrames, interval, self.curCoordsFile, 
+                               self.curLocalFile, self.recStart)
+        self.animf.moveToThread(self.thread)
+        
+        # Connect signals and slots
+        self.thread.started.connect(self.animf.run)
+        self.animf.finished.connect(self.thread.quit)
+        self.animf.finished.connect(self.animf.deleteLater)
+        
+        self.thread.start()
+        self.saveBtn.setEnabled(False)
+        self.thread.finished.connect(self.saveAnimFinished)
+        
+    def saveAnimFinished(self):
+        """ Makes necessary changes to UI after animation file has been saved. """
+        QMessageBox.information(self, "Info", "Animation saved.")
+        self.parent.saveAnimFinished()
+        self.saveBtn.setEnabled(True)
+        
     def updateSlider(self, outputDir):
         """ 
          Updates the slider range and scale factors for the most recent simulation run.  
@@ -508,11 +554,11 @@ class WidgetPlotLocal(WidgetPlot):
             self.recEnd = int(params[29]) - 365
             self.recIntervalLocal = int(params[31])
             self.plotSlider.setMinimum(0) 
-            print("Slider's recStart:", self.recStart)
-            print("Slider's recEnd:", self.recEnd)
+            #print("Slider's recStart:", self.recStart)
+            #print("Slider's recEnd:", self.recEnd)
             self.plotSlider.setMaximum(int((self.recEnd - self.recStart + 1) / self.recIntervalLocal)) # recEnd is inclusive
-            print("Slider's max:", self.plotSlider.maximum())
-            print("Slider's min:", self.plotSlider.minimum())
+            #print("Slider's max:", self.plotSlider.maximum())
+            #print("Slider's min:", self.plotSlider.minimum())
             self.plotSlider.setSingleStep(1)
             self.plotSlider.setPageStep(1) 
             self.plotSlider.setTickInterval(1)

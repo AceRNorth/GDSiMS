@@ -45,7 +45,7 @@ class WindowWidget(QWidget):
         self.totalsGenPlotSpace = widgetplot.WidgetPlotTotalsGen()
         self.totalsAllelePlotSpace = widgetplot.WidgetPlotTotalsAllele()
         self.coordsPlotSpace = widgetplot.WidgetPlotCoords()
-        self.localPlotSpace = widgetplot.WidgetPlotLocal()
+        self.localPlotSpace = widgetplot.WidgetPlotLocal(self)
         self.plotSpaces = [self.totalsGenPlotSpace, self.totalsAllelePlotSpace, self.coordsPlotSpace, self.localPlotSpace]
         plotTabs.addTab(self.totalsGenPlotSpace, "Totals - Genotype")
         plotTabs.addTab(self.totalsAllelePlotSpace, "Totals - Allele freq.")
@@ -132,4 +132,12 @@ class WindowWidget(QWidget):
 
         """
         self.simRunSpace.isSimRunning()
+        
+    def saveAnimStarted(self):
+        """ Makes necessary changes to the UI after a saving animation file process has started. """
+        self.simRunSpace.disableRunBtn()
+        
+    def saveAnimFinished(self):
+        """ Makes necessary changes to the UI after a saving animation file process has finished. """
+        self.simRunSpace.enableRunBtn()
       

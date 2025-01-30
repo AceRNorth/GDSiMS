@@ -237,3 +237,9 @@ class WidgetRun(QWidget):
             return True
         else:
             return False
+        
+    def disableRunBtn(self):
+        self.runBtn.setEnabled(False)
+        
+    def enableRunBtn(self):
+        self.runBtn.setEnabled(True)
