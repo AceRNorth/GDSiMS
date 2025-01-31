@@ -8,7 +8,7 @@ Created on Thu Oct 24 11:46:12 2024
 import sys
 from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QMainWindow, QStyle, QAction, QMessageBox
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt
 import webbrowser
 import winwidget
@@ -32,6 +32,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(title)
         self.setGeometry(left, top, width, height) # sets position and size of window
         self.setWindowIcon(QIcon("web.png")) # window icon on corner of window
+        #self.setFont(QFont("Arial", 9))
         
         self.advWindow = advwin.AdvancedWindow(self)
         self.advWindow.hide()

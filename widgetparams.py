@@ -5,8 +5,9 @@ Created on Mon Jan  6 15:12:05 2025
 @author: biol0117
 """
 
-from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QComboBox, QPushButton, QFrame, QSpinBox, QDoubleSpinBox
-from PyQt5.QtGui import QPalette, QColor
+from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QComboBox, QPushButton, QFrame, QSpinBox, QDoubleSpinBox, QStyle
+from PyQt5.QtGui import QPalette, QColor, QIcon, QPixmap, QFont
+from PyQt5.QtCore import Qt
 import os
 import shutil
 import numpy as np
@@ -43,10 +44,10 @@ class WidgetParams(QWidget):
             "Set 6 - high dispersal rate"
         ])
         setsCB.resize(setsCB.sizeHint())
-        setsCB.setFixedWidth(160)
+        #setsCB.setFixedWidth(160)
         setsBtn = QPushButton("Load")
         setsBtn.setToolTip("Load selected parameter set")
-        setsBtn.resize(setsBtn.sizeHint())
+        #setsBtn.setFixedWidth(100)
         setsBtn.clicked.connect(lambda: self.loadSet(setsCB.currentIndex()))
         
         line1 = QFrame()
@@ -55,15 +56,15 @@ class WidgetParams(QWidget):
         pal.setColor(QPalette.WindowText, QColor("lightGray"))
         line1.setPalette(pal)
         
-        progTitle = QLabel("Progression and model area")
-        numRunsLabel = QLabel("num_runs \U0001F6C8")
+        progTitle = QLabel("Simulation")
+        numRunsLabel = QLabel("no. of replicates \U0001F6C8")
         numRunsLabel.setToolTip("Number of simulation replicates to run.")
         self.numRunsSB = QSpinBox()
         self.numRunsSB.setMinimum(1)
         self.numRunsSB.setMaximum(10000)
         self.numRunsSB.setValue(1)
         self.numRunsSB.resize(self.numRunsSB.sizeHint())
-        maxTLabel = QLabel("max_t")
+        maxTLabel = QLabel("simulation time \U0001F6C8")
         maxTLabel.setToolTip("Maximum simulated time (in days).")
         self.maxTSB = QSpinBox()
         self.maxTSB.setMinimum(1)
@@ -71,7 +72,7 @@ class WidgetParams(QWidget):
         self.maxTSB.setValue(1000)
         self.maxTSB.setSingleStep(100)
         self.maxTSB.resize(self.maxTSB.sizeHint())
-        numPatLabel = QLabel("num_pat")
+        numPatLabel = QLabel("no. of patches \U0001F6C8")
         numPatLabel.setToolTip("Number of population sites chosen for the simulation.")
         self.numPatSB = QSpinBox()
         self.numPatSB.setMinimum(1)
@@ -85,7 +86,7 @@ class WidgetParams(QWidget):
         line2.setPalette(pal)
         
         inherTitle = QLabel("Gene drive inheritance")
-        xiLabel = QLabel("xi")
+        xiLabel = QLabel("fitness cost \U0001F6C8")
         xiLabel.setToolTip("Somatic Cas9 expression fitness cost.")
         self.xiSB = QDoubleSpinBox()
         self.xiSB.setMinimum(0.0)
@@ -93,7 +94,7 @@ class WidgetParams(QWidget):
         self.xiSB.setValue(0.5)
         self.xiSB.setSingleStep(0.05)
         self.xiSB.resize(self.xiSB.sizeHint())
-        eLabel = QLabel("e")
+        eLabel = QLabel("homing rate \U0001F6C8")
         eLabel.setToolTip("Homing rate in females.")
         self.eSB = QDoubleSpinBox()
         self.eSB.setMinimum(0.0)
@@ -107,7 +108,7 @@ class WidgetParams(QWidget):
         line3.setPalette(pal)
         
         releaseTitle = QLabel("Gene drive release")
-        driverStartLabel = QLabel("driver_start")
+        driverStartLabel = QLabel("release time \U0001F6C8")
         driverStartLabel.setToolTip("Time to start releasing drive alleles into the mosquito population.")
         self.driverStartSB = QSpinBox()
         self.driverStartSB.setMinimum(1)
@@ -116,7 +117,7 @@ class WidgetParams(QWidget):
         self.driverStartSB.setSingleStep(100)
         self.driverStartSB.resize(self.driverStartSB.sizeHint())
         
-        numDriverMLabel = QLabel("num_driver_M")
+        numDriverMLabel = QLabel("release size \U0001F6C8")
         numDriverMLabel.setToolTip("Number of drive heterozygous (WD) male mosquitoes per release.")
         self.numDriverMSB = QSpinBox()
         self.numDriverMSB.setMinimum(0)
@@ -124,7 +125,7 @@ class WidgetParams(QWidget):
         self.numDriverMSB.setValue(1000)
         self.numDriverMSB.setSingleStep(100)
         self.numDriverMSB.resize(self.numDriverMSB.sizeHint())
-        numDriverSitesLabel = QLabel("num_driver_sites")
+        numDriverSitesLabel = QLabel("no. of release patches \U0001F6C8")
         numDriverSitesLabel.setToolTip("Number of gene drive release sites per year.")
         self.numDriverSitesSB = QSpinBox()
         self.numDriverSitesSB.setMinimum(0)
@@ -141,32 +142,46 @@ class WidgetParams(QWidget):
         advancedBtn.clicked.connect(self.openAdvanced)
         
         self.layout().addWidget(setsLabel, 1, 0, 1, 2)
-        self.layout().addWidget(setsCB, 2, 0)
+        self.layout().addWidget(setsCB, 2, 0, 1, 1)
         self.layout().addWidget(setsBtn, 2, 1)
         self.layout().addWidget(line1, 3, 0, 1, 2)
         self.layout().addWidget(progTitle, 4, 0, 1, 2)
         self.layout().addWidget(numRunsLabel, 5, 0)
         self.layout().addWidget(self.numRunsSB, 5, 1)
         self.layout().addWidget(maxTLabel, 6, 0)
+        #self.layout().addWidget(numRunsInfo, 6, 1)
         self.layout().addWidget(self.maxTSB, 6, 1)
         self.layout().addWidget(numPatLabel, 7, 0)
+        #self.layout().addWidget(numRunsInfo, 7, 1)
         self.layout().addWidget(self.numPatSB, 7, 1)
         self.layout().addWidget(line2, 8, 0, 1, 2)
         self.layout().addWidget(inherTitle, 9, 0, 1, 2)
         self.layout().addWidget(xiLabel, 10, 0)
+        #self.layout().addWidget(numRunsInfo, 10, 1)
         self.layout().addWidget(self.xiSB, 10, 1)
         self.layout().addWidget(eLabel, 11, 0)
+        #self.layout().addWidget(numRunsInfo, 11, 1)
         self.layout().addWidget(self.eSB, 11, 1)
         self.layout().addWidget(line3, 12, 0, 1, 2)
         self.layout().addWidget(releaseTitle, 13, 0, 1, 2)
         self.layout().addWidget(driverStartLabel, 14, 0)
+        #self.layout().addWidget(numRunsInfo, 14, 1)
         self.layout().addWidget(self.driverStartSB, 14, 1)
         self.layout().addWidget(numDriverMLabel, 15, 0)
+        #self.layout().addWidget(numRunsInfo, 15, 1)
         self.layout().addWidget(self.numDriverMSB, 15, 1)
         self.layout().addWidget(numDriverSitesLabel, 16, 0)
+        #self.layout().addWidget(numRunsInfo, 16, 1)
         self.layout().addWidget(self.numDriverSitesSB, 16, 1)
         self.layout().addWidget(line4, 18, 0, 1, 2)
         self.layout().addWidget(advancedBtn, 19, 0)
+        
+        #self.layout().setColumnMinimumWidth(0, 160)
+        #self.layout().setColumnMinimumWidth(1, 10)
+        self.layout().setColumnStretch(0, 3)
+        self.layout().setColumnStretch(1, 2)
+        #self.layout().setColumnStretch(2, 4)
+        #self.layout().setHorizontalSpacing(0)
       
     def initParamSets(self):
         """ Initialises the pre-defined parameter sets. """
