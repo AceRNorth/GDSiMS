@@ -11,6 +11,7 @@ from pathlib import Path
 import os
 from datetime import datetime
 import sim
+from progressreader import ProgressReader
 import gdsimsgui
 
 class WidgetRun(QWidget):
@@ -56,10 +57,10 @@ class WidgetRun(QWidget):
         self.abortBtn.clicked.connect(self.abortSim)
         self.abortBtn.setEnabled(False)
         self.abortBtn.hide()
-        msgBar = QLineEdit()
-        msgBar.setText("Waiting for run.")
-        msgBar.setReadOnly(True)
-        msgBar.resize(msgBar.sizeHint())
+        self.msgBar = QLineEdit()
+        self.msgBar.setText("Waiting for run.")
+        self.msgBar.setReadOnly(True)
+        self.msgBar.resize(self.msgBar.sizeHint())
         
         self.layout().setHorizontalSpacing(5)
         self.layout().addWidget(outputDirLabel, 0, 0)
@@ -70,7 +71,7 @@ class WidgetRun(QWidget):
         self.layout().addWidget(self.progBar, 2, 0, 1, 6)
         self.layout().addWidget(self.runBtn, 2, 6, 1, 2)
         self.layout().addWidget(self.abortBtn, 2, 6, 1, 2)
-        self.layout().addWidget(msgBar, 3, 0, 1, 8)
+        self.layout().addWidget(self.msgBar, 3, 0, 1, 8)
         
         
     def openDirDialog(self, dirNameEdit):
@@ -84,13 +85,17 @@ class WidgetRun(QWidget):
         """ Sets up the simulation run on a separate thread."""
         validDir = self.createOutputDir(self.outputDirNameEdit.text(), self.simNameEdit.text())
         if validDir:
-            self.progBar.setValue(0)
             self.winWidget.runStarted()
             customSet = self.winWidget.createParamsFile(self.outputPath)
             self.winWidget.copyAdvFiles(self.outputPath) # so have all files used saved in same sim run directory
             
+            # Set up progress bar
+            self.progBar.setMinimum(0)
+            self.progBar.setMaximum(customSet.numRuns * (customSet.maxT+1))
+            self.progBar.reset()
+            
             # Create simulation run thread
-            self.thread = QThread()
+            self.simThread = QThread()
             self.simulation = sim.Simulation(self.outputPath,
                                          self.simName,
                                          customSet.dispType, 
@@ -99,24 +104,41 @@ class WidgetRun(QWidget):
                                          customSet.coordsFile,
                                          customSet.relTimesFile
                                          )
-            self.simulation.moveToThread(self.thread)
+            self.simulation.moveToThread(self.simThread)
+            
+            # Create progress reader thread
+            self.progThread = QThread()
+            outputFiles = [] 
+            for i in range(1, customSet.numRuns + 1): # find filepaths to read for each run
+                filePath = os.path.join(self.outputPath, "output_files", "Totals{}run{}.txt").format(customSet.setLabel, i)
+                outputFiles.append(filePath)
+            self.progReader = ProgressReader(outputFiles, customSet.maxT, customSet.numRuns)
+            self.progReader.moveToThread(self.progThread)
             
             # Connect signals and slots
-            self.thread.started.connect(self.simulation.run)
-            self.simulation.finished.connect(self.thread.quit)
+            self.simThread.started.connect(self.simulation.run)
+            self.simulation.finished.connect(self.simThread.quit)
             self.simulation.finished.connect(self.simulation.deleteLater)
-            self.thread.finished.connect(self.thread.deleteLater)
+            self.simThread.finished.connect(self.simThread.deleteLater)
             self.simulation.error.connect(self.runError)
+            
+            self.progThread.started.connect(self.progReader.run)
+            self.progReader.finished.connect(self.progThread.quit)
+            self.progReader.finished.connect(self.progReader.deleteLater)
+            self.progThread.finished.connect(self.progThread.deleteLater)
+            self.progReader.progress.connect(lambda v: self.updateProg(v, customSet.maxT, customSet.numRuns))
     
+            # Start threads
             self.abortCode = 0
-            self.thread.start()
+            self.simThread.start()
+            self.progThread.start()
             
             # Disable and hide run button while subprocess is running and enable abort button in its place
             self.runBtn.setEnabled(False)
             self.runBtn.hide()
             self.abortBtn.setEnabled(True)
             self.abortBtn.show()
-            self.thread.finished.connect(lambda: self.runFinished(self.abortCode))
+            self.simThread.finished.connect(lambda: self.runFinished(self.abortCode))
     
             # Start the QTimer to read the output file periodically
             # self.timer = QTimer(self)
@@ -126,10 +148,12 @@ class WidgetRun(QWidget):
     def abortSim(self):
        """ Aborts the simulation run. """
        if self.simulation:
+           self.progThread.quit()
+           self.progThread.wait()
            self.abortCode = 1
            self.simulation.abort()
-           self.thread.quit()
-           self.thread.wait()
+           self.simThread.quit()
+           self.simThread.wait()
         
     def createOutputDir(self, dirPath, simName):
         """
@@ -196,11 +220,12 @@ class WidgetRun(QWidget):
         self.runBtn.show()
         self.runBtn.setEnabled(True)
         if abortCode == 0:
-            self.progBar.setValue(100)
+            self.msgBar.setText("Waiting for run.")
             self.winWidget.runFinished(self.outputPath)
             QMessageBox.information(self, "Info", "Simulation completed successfully!")
         else:
-            self.progBar.setValue(0)
+            self.progBar.reset()
+            self.msgBar.setText("Waiting for run.")
             self.winWidget.runFinished(self.outputPath)
             QMessageBox.information(self, "Info", "Simulation aborted.")
         self.simulation = None
@@ -237,6 +262,13 @@ class WidgetRun(QWidget):
             return True
         else:
             return False
+        
+    def updateProg(self, progValue, maxT, numRuns):
+        self.progBar.setValue(progValue)
+        curRun = int(progValue / (maxT+1)) + 1
+        curDay = progValue - ((curRun-1) * (maxT+1)) - 365 
+        # convert maxT text to user's maxT without burn-in period
+        self.msgBar.setText("Running simulation {} run {}/{} day {}/{}".format(self.simName, curRun, numRuns, curDay, maxT - 365))
         
     def disableRunBtn(self):
         self.runBtn.setEnabled(False)
