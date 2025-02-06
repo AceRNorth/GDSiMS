@@ -5,7 +5,7 @@ Created on Mon Jan  6 14:39:54 2025
 @author: biol0117
 """
 
-from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit, QPushButton, QProgressBar, QStyle, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLabel, QLineEdit, QPushButton, QProgressBar, QStyle, QFileDialog, QMessageBox
 from PyQt5.QtCore import Qt, QThread
 from pathlib import Path
 import os
@@ -148,6 +148,8 @@ class WidgetRun(QWidget):
     def abortSim(self):
        """ Aborts the simulation run. """
        if self.simulation:
+           self.msgBar.setText("Aborting simulation... Please wait.")
+           QApplication.processEvents()
            self.progThread.quit()
            self.progThread.wait()
            self.abortCode = 1
@@ -226,7 +228,7 @@ class WidgetRun(QWidget):
         else:
             self.progBar.reset()
             self.msgBar.setText("Waiting for run.")
-            self.winWidget.runFinished(self.outputPath)
+            # no run finished for plots because don't want to access incomplete files
             QMessageBox.information(self, "Info", "Simulation aborted.")
         self.simulation = None
         
