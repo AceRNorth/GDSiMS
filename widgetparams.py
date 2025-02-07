@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QComboBox, QPushButton
 from PyQt5.QtGui import QPalette, QColor, QIcon, QPixmap, QFont
 from PyQt5.QtCore import Qt
 import os
+import csv
 import shutil
 import numpy as np
 import params
@@ -57,23 +58,23 @@ class WidgetParams(QWidget):
         line1.setPalette(pal)
         
         progTitle = QLabel("Simulation")
-        numRunsLabel = QLabel("no. of replicates \U0001F6C8")
-        numRunsLabel.setToolTip("Number of simulation replicates to run.")
+        self.numRunsLabel = QLabel("no. of replicates")
+        self.numRunsLabel.setToolTip("Number of simulation replicates to run.")
         self.numRunsSB = QSpinBox()
         self.numRunsSB.setMinimum(1)
         self.numRunsSB.setMaximum(10000)
         self.numRunsSB.setValue(1)
         self.numRunsSB.resize(self.numRunsSB.sizeHint())
-        maxTLabel = QLabel("simulation time \U0001F6C8")
-        maxTLabel.setToolTip("Maximum simulated time (in days).")
+        self.maxTLabel = QLabel("simulation time")
+        self.maxTLabel.setToolTip("Maximum simulated time (in days).")
         self.maxTSB = QSpinBox()
         self.maxTSB.setMinimum(1)
         self.maxTSB.setMaximum(10000)
         self.maxTSB.setValue(1000)
         self.maxTSB.setSingleStep(100)
         self.maxTSB.resize(self.maxTSB.sizeHint())
-        numPatLabel = QLabel("no. of patches \U0001F6C8")
-        numPatLabel.setToolTip("Number of population sites chosen for the simulation.")
+        self.numPatLabel = QLabel("no. of patches")
+        self.numPatLabel.setToolTip("Number of population sites chosen for the simulation.")
         self.numPatSB = QSpinBox()
         self.numPatSB.setMinimum(1)
         self.numPatSB.setMaximum(100000)
@@ -86,16 +87,16 @@ class WidgetParams(QWidget):
         line2.setPalette(pal)
         
         inherTitle = QLabel("Gene drive inheritance")
-        xiLabel = QLabel("fitness cost \U0001F6C8")
-        xiLabel.setToolTip("Somatic Cas9 expression fitness cost.")
+        self.xiLabel = QLabel("fitness cost")
+        self.xiLabel.setToolTip("Somatic Cas9 expression fitness cost.")
         self.xiSB = QDoubleSpinBox()
         self.xiSB.setMinimum(0.0)
         self.xiSB.setMaximum(1.0)
         self.xiSB.setValue(0.5)
         self.xiSB.setSingleStep(0.05)
         self.xiSB.resize(self.xiSB.sizeHint())
-        eLabel = QLabel("homing rate \U0001F6C8")
-        eLabel.setToolTip("Homing rate in females.")
+        self.eLabel = QLabel("homing rate")
+        self.eLabel.setToolTip("Homing rate in females.")
         self.eSB = QDoubleSpinBox()
         self.eSB.setMinimum(0.0)
         self.eSB.setMaximum(1.0)
@@ -108,8 +109,8 @@ class WidgetParams(QWidget):
         line3.setPalette(pal)
         
         releaseTitle = QLabel("Gene drive release")
-        driverStartLabel = QLabel("release time \U0001F6C8")
-        driverStartLabel.setToolTip("Time to start releasing drive alleles into the mosquito population.")
+        self.driverStartLabel = QLabel("release time")
+        self.driverStartLabel.setToolTip("Time to start releasing drive alleles into the mosquito population.")
         self.driverStartSB = QSpinBox()
         self.driverStartSB.setMinimum(1)
         self.driverStartSB.setMaximum(10000)
@@ -117,16 +118,16 @@ class WidgetParams(QWidget):
         self.driverStartSB.setSingleStep(100)
         self.driverStartSB.resize(self.driverStartSB.sizeHint())
         
-        numDriverMLabel = QLabel("release size \U0001F6C8")
-        numDriverMLabel.setToolTip("Number of drive heterozygous (WD) male mosquitoes per release.")
+        self.numDriverMLabel = QLabel("release size")
+        self.numDriverMLabel.setToolTip("Number of drive heterozygous (WD) male mosquitoes per release.")
         self.numDriverMSB = QSpinBox()
         self.numDriverMSB.setMinimum(0)
         self.numDriverMSB.setMaximum(100000)
         self.numDriverMSB.setValue(1000)
         self.numDriverMSB.setSingleStep(100)
         self.numDriverMSB.resize(self.numDriverMSB.sizeHint())
-        numDriverSitesLabel = QLabel("no. of release patches \U0001F6C8")
-        numDriverSitesLabel.setToolTip("Number of gene drive release sites per year.")
+        self.numDriverSitesLabel = QLabel("no. of release patches")
+        self.numDriverSitesLabel.setToolTip("Number of gene drive release sites per year.")
         self.numDriverSitesSB = QSpinBox()
         self.numDriverSitesSB.setMinimum(0)
         self.numDriverSitesSB.setMaximum(100000)
@@ -146,42 +147,31 @@ class WidgetParams(QWidget):
         self.layout().addWidget(setsBtn, 2, 1)
         self.layout().addWidget(line1, 3, 0, 1, 2)
         self.layout().addWidget(progTitle, 4, 0, 1, 2)
-        self.layout().addWidget(numRunsLabel, 5, 0)
+        self.layout().addWidget(self.numRunsLabel, 5, 0)
         self.layout().addWidget(self.numRunsSB, 5, 1)
-        self.layout().addWidget(maxTLabel, 6, 0)
-        #self.layout().addWidget(numRunsInfo, 6, 1)
+        self.layout().addWidget(self.maxTLabel, 6, 0)
         self.layout().addWidget(self.maxTSB, 6, 1)
-        self.layout().addWidget(numPatLabel, 7, 0)
-        #self.layout().addWidget(numRunsInfo, 7, 1)
+        self.layout().addWidget(self.numPatLabel, 7, 0)
         self.layout().addWidget(self.numPatSB, 7, 1)
         self.layout().addWidget(line2, 8, 0, 1, 2)
         self.layout().addWidget(inherTitle, 9, 0, 1, 2)
-        self.layout().addWidget(xiLabel, 10, 0)
-        #self.layout().addWidget(numRunsInfo, 10, 1)
+        self.layout().addWidget(self.xiLabel, 10, 0)
         self.layout().addWidget(self.xiSB, 10, 1)
-        self.layout().addWidget(eLabel, 11, 0)
-        #self.layout().addWidget(numRunsInfo, 11, 1)
+        self.layout().addWidget(self.eLabel, 11, 0)
         self.layout().addWidget(self.eSB, 11, 1)
         self.layout().addWidget(line3, 12, 0, 1, 2)
         self.layout().addWidget(releaseTitle, 13, 0, 1, 2)
-        self.layout().addWidget(driverStartLabel, 14, 0)
-        #self.layout().addWidget(numRunsInfo, 14, 1)
+        self.layout().addWidget(self.driverStartLabel, 14, 0)
         self.layout().addWidget(self.driverStartSB, 14, 1)
-        self.layout().addWidget(numDriverMLabel, 15, 0)
-        #self.layout().addWidget(numRunsInfo, 15, 1)
+        self.layout().addWidget(self.numDriverMLabel, 15, 0)
         self.layout().addWidget(self.numDriverMSB, 15, 1)
-        self.layout().addWidget(numDriverSitesLabel, 16, 0)
-        #self.layout().addWidget(numRunsInfo, 16, 1)
+        self.layout().addWidget(self.numDriverSitesLabel, 16, 0)
         self.layout().addWidget(self.numDriverSitesSB, 16, 1)
         self.layout().addWidget(line4, 18, 0, 1, 2)
         self.layout().addWidget(advancedBtn, 19, 0)
         
-        #self.layout().setColumnMinimumWidth(0, 160)
-        #self.layout().setColumnMinimumWidth(1, 10)
         self.layout().setColumnStretch(0, 3)
         self.layout().setColumnStretch(1, 2)
-        #self.layout().setColumnStretch(2, 4)
-        #self.layout().setHorizontalSpacing(0)
       
     def initParamSets(self):
         """ Initialises the pre-defined parameter sets. """
@@ -442,7 +432,7 @@ class WidgetParams(QWidget):
         
     def loadSet(self, setIndex):
         """
-        Update the UI parameter box values with those from the parameter set selected on all windows.
+        Update the UI parameter box values on all windows with those from the parameter set selected .
 
         Parameters
         ----------
@@ -544,7 +534,7 @@ class WidgetParams(QWidget):
                 
         return str(filePath)
         
-    def createParamsFile(self, outputDirPath):
+    def createParamsFiles(self, outputDirPath):
         """
         Creates a parameters file for the simulation run in the selected simulation output directory using the current UI parameter values.
 
@@ -603,64 +593,137 @@ class WidgetParams(QWidget):
                             coordsFile = None if advParams.patchCoordsFile == False else self.advWindow.coordsFile,
                             relTimesFile = None if advParams.relTimesFile == False else sRelTimesFile
                         )
-    
         
-        # turn class data into "params.txt" file in selected outputDir path
-        filePath = outputDirPath / "params.txt"
-        with open(filePath, "w") as file:
-            file.write(str(self.customSet.numRuns) + "\n")
-            file.write(str(self.customSet.maxT) + "\n")
-            file.write(str(self.customSet.numPat) + "\n")
-            file.write(str(self.customSet.muJ) + "\n")
-            file.write(str(self.customSet.muA) + "\n")
-            file.write(str(self.customSet.beta) + "\n")
-            file.write(str(self.customSet.theta) + "\n")
-            file.write(str(self.customSet.compPower) + "\n")
-            file.write(str(self.customSet.minDev) + "\n")
-            file.write(str(self.customSet.gamma) + "\n")
-            file.write(str(self.customSet.xi) + "\n")
-            file.write(str(self.customSet.e) + "\n")
-            file.write(str(self.customSet.driverStart) + "\n")
-            file.write(str(self.customSet.numDriverM) + "\n")
-            file.write(str(self.customSet.numDriverSites) + "\n")
-            file.write(str(self.customSet.dispRate) + "\n")
-            file.write(str(self.customSet.maxDisp) + "\n")
-            file.write(str(self.customSet.psi) + "\n")
-            file.write(str(self.customSet.muAes) + "\n")
-            file.write(str(self.customSet.tHide1) + "\n")
-            file.write(str(self.customSet.tHide2) + "\n")
-            file.write(str(self.customSet.tWake1) + "\n")
-            file.write(str(self.customSet.tWake2) + "\n")
-            file.write(str(self.customSet.alpha0Mean) + "\n")
-            file.write(str(self.customSet.alpha0Variance) + "\n")
-            file.write(str(self.customSet.alpha1) + "\n")
-            file.write(str(self.customSet.amp) + "\n")
-            file.write(str(self.customSet.resp) + "\n")
-            file.write(str(self.customSet.recStart) + "\n")
-            file.write(str(self.customSet.recEnd) + "\n")
-            file.write(str(self.customSet.recIntervalGlobal) + "\n")
-            file.write(str(self.customSet.recIntervalLocal) + "\n")
-            file.write(str(self.customSet.recSitesFreq) + "\n")
-            file.write(str(self.customSet.setLabel) + "\n")
+        advParamsInfo = self.advWindow.getParamsInfo()
+        self.customSetInfo = params.InputParams(
+                                numRuns = (self.numRunsLabel.text(), self.numRunsLabel.toolTip()), 
+                                maxT = (self.maxTLabel.text(), self.maxTLabel.toolTip()),
+                                numPat = (self.numPatLabel.text(), self.numPatLabel.toolTip()),
+                                muJ = advParamsInfo.muJ,
+                                muA = advParamsInfo.muA,
+                                beta = advParamsInfo.beta,
+                                theta = advParamsInfo.theta,
+                                compPower = advParamsInfo.compPower,
+                                minDev = advParamsInfo.minDev,
+                                gamma = advParamsInfo.gamma,
+                                xi = (self.xiLabel.text(), self.xiLabel.toolTip()),
+                                e = (self.eLabel.text(), self.eLabel.toolTip()),
+                                driverStart = (self.driverStartLabel.text(), self.driverStartLabel.toolTip()),
+                                numDriverM = (self.numDriverMLabel.text(), self.numDriverMLabel.toolTip()),
+                                numDriverSites = (self.numDriverSitesLabel.text(), self.numDriverSitesLabel.toolTip()),
+                                dispRate = advParamsInfo.dispRate,
+                                maxDisp = advParamsInfo.maxDisp,
+                                psi = advParamsInfo.psi,
+                                muAes = advParamsInfo.muAes,
+                                tHide1 = advParamsInfo.tHide1,
+                                tHide2 = advParamsInfo.tHide2,
+                                tWake1 = advParamsInfo.tWake1,
+                                tWake2 = advParamsInfo.tWake2,
+                                alpha0Mean = advParamsInfo.alpha0Mean,
+                                alpha0Variance = advParamsInfo.alpha0Var,
+                                alpha1 = advParamsInfo.alpha1,
+                                amp = advParamsInfo.amp,
+                                resp = advParamsInfo.resp,
+                                recStart = ("output start (full data)", "Start time for the full data recording window. Has been set equal to the release time."),
+                                recEnd = ("output end (full data)", "End time for the full data recording window. Has been set equal to the simulation time."),
+                                recIntervalGlobal = ("output frequency (summary data)", "Time interval for summary data recording. Has been set to 1."),
+                                recIntervalLocal = advParamsInfo.recIntervalLocal,
+                                recSitesFreq = ("local site freq.", "Fraction of sites to collect local data for (1 is all sites. 10 is 1 in 10 etc). Has been set to 1."),
+                                setLabel = advParamsInfo.setLabel,
+                                dispType = advParamsInfo.dispType,
+                                boundaryType = advParamsInfo.boundaryType,
+                                rainfallFile = advParamsInfo.rainfallFile,
+                                coordsFile = advParamsInfo.patchCoordsFile,
+                                relTimesFile = advParamsInfo.relTimesFile
+                            )
+        
+        self.createProgramParamsFile(outputDirPath, self.customSet)
+        self.createUserParamsFile(outputDirPath, self.customSet, self.customSetInfo)
             
         return self.customSet
     
-    def copyAdvFiles(self, outputDir):
-        """
-        Makes a copy of the advanced parameter files selected in the simulation output directory.
-
-        Parameters
-        ----------
-        outputDir : Path
-            Absolute path to the simulation output directory.
-
-        Returns
-        -------
-        None.
-
-        """
-        if self.customSet.rainfallFile != None:
-            shutil.copy(self.customSet.rainfallFile, os.path.join(outputDir, "rainfall.txt"))
-        if self.customSet.coordsFile != None:
-            shutil.copy(self.customSet.coordsFile, os.path.join(outputDir, "coords.txt"))
+    def createProgramParamsFile(self, outputDir, paramSet):
+        # turn class data into "params.txt" file in selected outputDir path
+        filePath = outputDir / "params.txt"
+        with open(filePath, "w") as file:
+            file.write(str(paramSet.numRuns) + "\n")
+            file.write(str(paramSet.maxT) + "\n")
+            file.write(str(paramSet.numPat) + "\n")
+            file.write(str(paramSet.muJ) + "\n")
+            file.write(str(paramSet.muA) + "\n")
+            file.write(str(paramSet.beta) + "\n")
+            file.write(str(paramSet.theta) + "\n")
+            file.write(str(paramSet.compPower) + "\n")
+            file.write(str(paramSet.minDev) + "\n")
+            file.write(str(paramSet.gamma) + "\n")
+            file.write(str(paramSet.xi) + "\n")
+            file.write(str(paramSet.e) + "\n")
+            file.write(str(paramSet.driverStart) + "\n")
+            file.write(str(paramSet.numDriverM) + "\n")
+            file.write(str(paramSet.numDriverSites) + "\n")
+            file.write(str(paramSet.dispRate) + "\n")
+            file.write(str(paramSet.maxDisp) + "\n")
+            file.write(str(paramSet.psi) + "\n")
+            file.write(str(paramSet.muAes) + "\n")
+            file.write(str(paramSet.tHide1) + "\n")
+            file.write(str(paramSet.tHide2) + "\n")
+            file.write(str(paramSet.tWake1) + "\n")
+            file.write(str(paramSet.tWake2) + "\n")
+            file.write(str(paramSet.alpha0Mean) + "\n")
+            file.write(str(paramSet.alpha0Variance) + "\n")
+            file.write(str(paramSet.alpha1) + "\n")
+            file.write(str(paramSet.amp) + "\n")
+            file.write(str(paramSet.resp) + "\n")
+            file.write(str(paramSet.recStart) + "\n")
+            file.write(str(paramSet.recEnd) + "\n")
+            file.write(str(paramSet.recIntervalGlobal) + "\n")
+            file.write(str(paramSet.recIntervalLocal) + "\n")
+            file.write(str(paramSet.recSitesFreq) + "\n")
+            file.write(str(paramSet.setLabel) + "\n")
+            
+    def createUserParamsFile(self, outputDir, paramSet, info):
+        # turn class data into "params.txt" file in selected outputDir path
+        filePath = outputDir / "paramsInfo.csv"
+        with open(filePath, 'w', newline='') as csvfile:
+            fw = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            fw.writerow(["Parameter name", "Program equivalent", "Value", "Description"])
+            fw.writerow([info.numRuns[0], "num_runs", str(paramSet.numRuns), info.numRuns[1]])
+            fw.writerow([info.maxT[0], "max_t", str(paramSet.maxT), info.maxT[1]])
+            fw.writerow([info.numPat[0], "num_pat", str(paramSet.numPat), info.numPat[1]])
+            fw.writerow([info.muJ[0], "mu_j", str(paramSet.muJ), info.muJ[1]])
+            fw.writerow([info.muA[0], "mu_a", str(paramSet.muA), info.muA[1]])
+            fw.writerow([info.beta[0], "beta", str(paramSet.beta), info.beta[1]])
+            fw.writerow([info.theta[0], "theta", str(paramSet.theta), info.theta[1]])
+            fw.writerow([info.compPower[0], "comp_power", str(paramSet.compPower), info.compPower[1]])
+            fw.writerow([info.minDev[0], "min_dev", str(paramSet.minDev), info.minDev[1]])
+            fw.writerow([info.gamma[0], "gamma", str(paramSet.gamma), info.gamma[1]])
+            fw.writerow([info.xi[0], "xi", str(paramSet.xi), info.xi[1]])
+            fw.writerow([info.e[0], "e", str(paramSet.e), info.e[1]])
+            fw.writerow([info.driverStart[0], "driver_start", str(paramSet.driverStart), info.driverStart[1]])
+            fw.writerow([info.numDriverM[0], "num_driver_M", str(paramSet.numDriverM), info.numDriverM[1]])
+            fw.writerow([info.numDriverSites[0], "num_driver_sites", str(paramSet.numDriverSites), info.numDriverSites[1]])
+            fw.writerow([info.dispRate[0], "disp_rate", str(paramSet.dispRate), info.dispRate[1]])
+            fw.writerow([info.maxDisp[0], "max_disp", str(paramSet.maxDisp), info.maxDisp[1]])
+            fw.writerow([info.psi[0], "psi", str(paramSet.psi), info.psi[1]])
+            fw.writerow([info.muAes[0], "mu_aes", str(paramSet.muAes), info.muAes[1]])
+            fw.writerow([info.tHide1[0], "t_hide1", str(paramSet.tHide1), info.tHide1[1]])
+            fw.writerow([info.tHide2[0], "t_hide2", str(paramSet.tHide2), info.tHide2[1]])
+            fw.writerow([info.tWake1[0], "t_wake1", str(paramSet.tWake1), info.tWake1[1]])
+            fw.writerow([info.tWake2[0], "t_wake2", str(paramSet.tWake2), info.tWake2[1]])
+            fw.writerow([info.alpha0Mean[0], "alpha0_mean", str(paramSet.alpha0Mean), info.alpha0Mean[1]])
+            fw.writerow([info.alpha0Variance[0], "alpha0_variance", str(paramSet.alpha0Variance), info.alpha0Variance[1]])
+            fw.writerow([info.alpha1[0], "alpha1", str(paramSet.alpha1), info.alpha1[1]])
+            fw.writerow([info.amp[0], "amp", str(paramSet.amp), info.amp[1]])
+            fw.writerow([info.resp[0], "resp", str(paramSet.resp), info.resp[1]])
+            fw.writerow([info.recStart[0], "rec_start", str(paramSet.recStart), info.recStart[1]])
+            fw.writerow([info.recEnd[0], "rec_end", str(paramSet.recEnd), info.recEnd[1]])
+            fw.writerow([info.recIntervalGlobal[0], "rec_interval_global", str(paramSet.recIntervalGlobal), info.recIntervalGlobal[1]])
+            fw.writerow([info.recIntervalLocal[0], "rec_interval_local", str(paramSet.recIntervalLocal), info.recIntervalLocal[1]])
+            fw.writerow([info.recSitesFreq[0], "rec_sites_freq", str(paramSet.recSitesFreq), info.recSitesFreq[1]])
+            fw.writerow([info.setLabel[0], "set_label", str(paramSet.setLabel), info.setLabel[1]])
+            fw.writerow([info.dispType[0], "", str(paramSet.dispType), info.dispType[1]])
+            fw.writerow([info.boundaryType[0], "", str(paramSet.boundaryType), info.boundaryType[1]])
+            fw.writerow([info.rainfallFile[0], "", "None" if paramSet.rainfallFile==None else str(paramSet.rainfallFile), info.rainfallFile[1]])
+            fw.writerow([info.coordsFile[0], "", "None" if paramSet.coordsFile==None else str(paramSet.coordsFile), info.coordsFile[1]])
+            fw.writerow([info.relTimesFile[0], "", "None" if paramSet.relTimesFile==None else str(paramSet.relTimesFile), info.relTimesFile[1]])
       

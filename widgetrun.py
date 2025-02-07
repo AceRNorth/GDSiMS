@@ -86,8 +86,7 @@ class WidgetRun(QWidget):
         validDir = self.createOutputDir(self.outputDirNameEdit.text(), self.simNameEdit.text())
         if validDir:
             self.winWidget.runStarted()
-            customSet = self.winWidget.createParamsFile(self.outputPath)
-            self.winWidget.copyAdvFiles(self.outputPath) # so have all files used saved in same sim run directory
+            customSet = self.winWidget.createParamsFiles(self.outputPath)
             
             # Set up progress bar
             self.progBar.setMinimum(0)

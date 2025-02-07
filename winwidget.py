@@ -79,9 +79,9 @@ class WindowWidget(QWidget):
         layout.addWidget(plotSpaceBox, 1, 3, 5, 5)
         self.mainBox.setLayout(layout)
         
-    def createParamsFile(self, outputDir):
+    def createParamsFiles(self, outputDir):
         """
-        Creates a parameters file for the simulation run in the selected simulation output directory using the current UI parameter values.
+        Creates parameter files for the simulation run in the selected simulation output directory using the current UI parameter values.
         
         Parameters
         ----------
@@ -94,7 +94,7 @@ class WindowWidget(QWidget):
             Custom parameter set.
 
         """
-        customSet = self.paramSpace.createParamsFile(outputDir)
+        customSet = self.paramSpace.createParamsFiles(outputDir)
         return customSet
     
     def copyAdvFiles(self, outputDir):
