@@ -221,7 +221,7 @@ class WidgetRun(QWidget):
         self.runBtn.show()
         self.runBtn.setEnabled(True)
         if abortCode == 0:
-            self.msgBar.setText("Waiting for run.")
+            #self.msgBar.setText("Waiting for run.")
             self.winWidget.runFinished(self.outputPath)
             QMessageBox.information(self, "Info", "Simulation completed successfully!")
         else:
@@ -267,9 +267,9 @@ class WidgetRun(QWidget):
     def updateProg(self, progValue, maxT, numRuns):
         self.progBar.setValue(progValue)
         curRun = int(progValue / (maxT+1)) + 1
-        curDay = progValue - ((curRun-1) * (maxT+1)) - 365 
+        curDay = progValue - ((curRun-1) * (maxT+1))
         # convert maxT text to user's maxT without burn-in period
-        self.msgBar.setText("Running simulation {} run {}/{} day {}/{}".format(self.simName, curRun, numRuns, curDay, maxT - 365))
+        self.msgBar.setText("Running simulation {} run {}/{} day {}/{}".format(self.simName, curRun, numRuns, curDay, maxT))
         
     def disableRunBtn(self):
         self.runBtn.setEnabled(False)

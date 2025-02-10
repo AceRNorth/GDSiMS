@@ -550,11 +550,9 @@ class WidgetParams(QWidget):
 
         """
         advParams = self.advWindow.getParams()
-        if advParams.relTimesFile == True:
-            sRelTimesFile = self.createScaledRelTimesFile(outputDirPath, self.advWindow.relTimesFile)
         self.customSet = params.InputParams(
                             numRuns = self.numRunsSB.value(), 
-                            maxT = self.maxTSB.value() + 365,
+                            maxT = self.maxTSB.value(),
                             numPat = self.numPatSB.value(),
                             muJ = advParams.muJ,
                             muA = advParams.muA,
@@ -565,7 +563,7 @@ class WidgetParams(QWidget):
                             gamma = advParams.gamma,
                             xi = self.xiSB.value(),
                             e = self.eSB.value(),
-                            driverStart = self.driverStartSB.value() + 365,
+                            driverStart = self.driverStartSB.value(),
                             numDriverM = self.numDriverMSB.value(),
                             numDriverSites = self.numDriverSitesSB.value(),
                             dispRate = advParams.dispRate,
@@ -581,8 +579,8 @@ class WidgetParams(QWidget):
                             alpha1 = advParams.alpha1,
                             amp = advParams.amp,
                             resp = advParams.resp,
-                            recStart = self.driverStartSB.value() + 365,
-                            recEnd = self.maxTSB.value() + 365,
+                            recStart = self.driverStartSB.value(),
+                            recEnd = self.maxTSB.value(),
                             recIntervalGlobal = 1,
                             recIntervalLocal = advParams.recIntervalLocal,
                             recSitesFreq = 1,
@@ -591,7 +589,7 @@ class WidgetParams(QWidget):
                             boundaryType = self.advWindow.boundaryType,
                             rainfallFile = None if advParams.rainfallFile == False else self.advWindow.rainfallFile,
                             coordsFile = None if advParams.patchCoordsFile == False else self.advWindow.coordsFile,
-                            relTimesFile = None if advParams.relTimesFile == False else sRelTimesFile
+                            relTimesFile = None if advParams.relTimesFile == False else self.advWindow.relTimesFile
                         )
         
         advParamsInfo = self.advWindow.getParamsInfo()

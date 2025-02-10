@@ -154,8 +154,8 @@ class TotalsGenPlotCanvas(PlotCanvas):
     
         self.axes.clear() # clears plot on the plot canvas before plotting the new curve(s)
         totals = np.loadtxt(file, skiprows=2)
-        times = totals[365:, 0] - 365 # discard first 365 days and rescale day no. for (starts from day 0)
-        total_males = totals[365:, 1:]
+        times = totals[0:, 0] 
+        total_males = totals[0:, 1:]
         for line in lines:  # keep same colours for same type of line
             lbl = ""
             col = "mediumturquoise"
@@ -233,8 +233,8 @@ class TotalsAllelePlotCanvas(PlotCanvas):
     
         self.axes.clear() # clears plot on the plot canvas before plotting the new curve(s)
         totals = np.loadtxt(file, skiprows=2)
-        times = totals[365:, 0] - 365 # discard first 365 days and rescale day no. for (starts from day 0)
-        total_males = totals[365:, 1:]
+        times = totals[0:, 0]
+        total_males = totals[0:, 1:]
         WW = total_males[:, 0]
         WD = total_males[:, 1]
         DD = total_males[:, 2]
@@ -374,16 +374,11 @@ class LocalPlotCanvas(PlotCanvas):
         """
         self.axes.clear() 
         ind, x, y = np.loadtxt(coordsFile, skiprows=2, unpack=True)
-        numRecPats = len(x) # number of recorded patches in one day  --  num_pat / rec_sites_freq ??
-        #print("t:", t)
-        #print("numRecPats:", numRecPats)
+        numRecPats = len(x) 
         localData = np.loadtxt(localFile, skiprows=2) # get populations 
-        recIntervalLocal = int(localData[2*numRecPats, 0]) - int(localData[1*numRecPats, 0])
-        #print("Local data:", localData)
-        #localData = localData[365:, :] # slicing from 365th row allows old timestep indexing going forwards
-        self.simDay = int(localData[(t+1)*numRecPats, 0]) # get populations on one day, t+1 because always ignore initialisation day
-        #print("simDay:", self.simDay)
-        localDataDay = localData[t*numRecPats:((t+2)*numRecPats), 2:8]
+        recIntervalLocal = int(localData[numRecPats, 0]) - int(localData[0, 0])
+        self.simDay = int(localData[t*numRecPats, 0]) # get populations on one day, t+1 because always ignore initialisation day
+        localDataDay = localData[t*numRecPats:((t+1)*numRecPats), 2:8]
 
         WW = localDataDay[:, 0]
         WD = localDataDay[:, 1]
