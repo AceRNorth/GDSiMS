@@ -514,25 +514,26 @@ class WidgetPlotLocal(WidgetPlot):
     def saveAnim(self):
         """ Saves the animation as a file on a separate thread. """
         fname, filt = QFileDialog.getSaveFileName(self, "Save animation", str(gdsimsgui.basedir), "*.gif")
-        fig = self.canvas.getFig()
-        numFrames = (int((self.recEnd - self.recStart) / self.recIntervalLocal)) + 1 # +1 because range(frames) used in FuncAnimation
-        interval = self.intervalSB.value()
-        
-        # Disable run button and start thread to save animation
-        self.parent.saveAnimStarted()
-        self.thread = QThread()
-        self.animf = AnimSaver(fname, fig, self.canvas.plot, numFrames, interval, self.curCoordsFile, 
-                               self.curLocalFile, self.recStart)
-        self.animf.moveToThread(self.thread)
-        
-        # Connect signals and slots
-        self.thread.started.connect(self.animf.run)
-        self.animf.finished.connect(self.thread.quit)
-        self.animf.finished.connect(self.animf.deleteLater)
-        
-        self.thread.start()
-        self.saveBtn.setEnabled(False)
-        self.thread.finished.connect(self.saveAnimFinished)
+        if fname and not fname.isspace(): # check dialog hasn't been cancelled (which would return a null string)   
+            fig = self.canvas.getFig()
+            numFrames = (int((self.recEnd - self.recStart) / self.recIntervalLocal)) + 1 # +1 because range(frames) used in FuncAnimation
+            interval = self.intervalSB.value()
+            
+            # Disable run button and start thread to save animation
+            self.parent.saveAnimStarted()
+            self.thread = QThread()
+            self.animf = AnimSaver(fname, fig, self.canvas.plot, numFrames, interval, self.curCoordsFile, 
+                                   self.curLocalFile, self.recStart)
+            self.animf.moveToThread(self.thread)
+            
+            # Connect signals and slots
+            self.thread.started.connect(self.animf.run)
+            self.animf.finished.connect(self.thread.quit)
+            self.animf.finished.connect(self.animf.deleteLater)
+            
+            self.thread.start()
+            self.saveBtn.setEnabled(False)
+            self.thread.finished.connect(self.saveAnimFinished)
         
     def saveAnimFinished(self):
         """ Makes necessary changes to UI after animation file has been saved. """

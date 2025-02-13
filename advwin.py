@@ -690,7 +690,7 @@ class AdvancedWindow(QDialog):
 
         """
         fname, ok = QFileDialog.getOpenFileName(self, "Select a file", ".", "Text files (*.txt)")
-        if fname:
+        if fname and not fname.isspace(): # check dialog hasn't been cancelled (which would return a null string)
             filename = Path(fname)
             filenameEdit.setText(str(filename))
             
