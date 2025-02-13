@@ -266,11 +266,14 @@ class WidgetRun(QWidget):
         
     def updateProg(self, progValue, maxT, numRuns):
         self.progBar.setValue(progValue)
-        curRun = int(progValue / (maxT+1)) + 1
-        curDay = progValue - ((curRun-1) * (maxT+1))
-        # convert maxT text to user's maxT without burn-in period
-        self.msgBar.setText("Running simulation {} run {}/{} day {}/{}".format(self.simName, curRun, numRuns, curDay, maxT))
-        
+        curRun = int(progValue / (maxT + 1)) + 1
+        if curRun <= numRuns:
+            if progValue % (maxT + 1) == 0:
+                self.msgBar.setText("Initialising simulation {} run {}/{}. Please wait.".format(self.simName, curRun, numRuns))
+            else:
+                curDay = progValue - ((curRun-1) * (maxT+1))
+                self.msgBar.setText("Running simulation {} run {}/{} day {}/{}".format(self.simName, curRun, numRuns, curDay, maxT))
+            
     def disableRunBtn(self):
         self.runBtn.setEnabled(False)
         
