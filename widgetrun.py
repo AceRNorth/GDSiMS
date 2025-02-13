@@ -185,8 +185,8 @@ class WidgetRun(QWidget):
                 self.outputPath = Path(dirPath) / Path(simName)
             else:
                 dt = datetime.now()
-                simName = str(dt.year) + "_" + str(dt.month) + "_" + str(dt.day)
-                simName +=  "_" + str(dt.hour) + str(dt.minute) + str(dt.second)
+                simName = str(dt.year) + "_" + str(dt.month) + "_" + "{:02d}".format(dt.day)
+                simName +=  "_" + "{:02d}".format(dt.hour) + "{:02d}".format(dt.minute) + "{:02d}".format(dt.second)
                 self.outputPath = Path(dirPath) / simName
             
             if not self.outputPath.exists():
