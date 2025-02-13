@@ -5,13 +5,9 @@ Created on Mon Jan  6 15:12:05 2025
 @author: biol0117
 """
 
-from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QComboBox, QPushButton, QFrame, QSpinBox, QDoubleSpinBox, QStyle
-from PyQt5.QtGui import QPalette, QColor, QIcon, QPixmap, QFont
-from PyQt5.QtCore import Qt
-import os
+from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QComboBox, QPushButton, QFrame, QSpinBox, QDoubleSpinBox
+from PyQt5.QtGui import QPalette, QColor
 import csv
-import shutil
-import numpy as np
 import params
 
 class WidgetParams(QWidget):
@@ -137,6 +133,26 @@ class WidgetParams(QWidget):
         line4 = QFrame()
         line4.setFrameShape(QFrame.HLine)
         line4.setPalette(pal)
+        
+        recTitle = QLabel("Recording")
+        self.setLabelLabel = QLabel("simulation label")
+        self.setLabelLabel.setToolTip("'Set of repetitions' index label for output files.")
+        self.setLabelSB = QSpinBox()
+        self.setLabelSB.setMaximum(10000000)
+        self.setLabelSB.setValue(1)
+        self.setLabelSB.resize(self.setLabelSB.sizeHint())
+        self.recIntervalLocalLabel = QLabel("output frequency (full data)")
+        self.recIntervalLocalLabel.setToolTip("Time interval at which to collect/record local data (in days). A low value produces higher temporal resolution data though will result in larger output file sizes.")
+        self.recIntervalLocalSB = QSpinBox()
+        self.recIntervalLocalSB.setMinimum(1)
+        self.recIntervalLocalSB.setMaximum(100000)
+        self.recIntervalLocalSB.setValue(365)
+        self.recIntervalLocalSB.setSingleStep(100)
+        self.recIntervalLocalSB.resize(self.recIntervalLocalSB.sizeHint())
+        
+        line5 = QFrame()
+        line5.setFrameShape(QFrame.HLine)
+        line5.setPalette(pal)
 
         advancedBtn = QPushButton("Advanced")
         advancedBtn.setToolTip("Advanced parameters")
@@ -168,7 +184,13 @@ class WidgetParams(QWidget):
         self.layout().addWidget(self.numDriverSitesLabel, 16, 0)
         self.layout().addWidget(self.numDriverSitesSB, 16, 1)
         self.layout().addWidget(line4, 18, 0, 1, 2)
-        self.layout().addWidget(advancedBtn, 19, 0)
+        self.layout().addWidget(recTitle, 19, 0)
+        self.layout().addWidget(self.setLabelLabel, 20, 0)
+        self.layout().addWidget(self.setLabelSB, 20, 1)
+        self.layout().addWidget(self.recIntervalLocalLabel, 21, 0)
+        self.layout().addWidget(self.recIntervalLocalSB, 21, 1)
+        self.layout().addWidget(line5, 22, 0, 1, 2)
+        self.layout().addWidget(advancedBtn, 23, 0)
         
         self.layout().setColumnStretch(0, 3)
         self.layout().setColumnStretch(1, 2)
@@ -472,8 +494,8 @@ class WidgetParams(QWidget):
         self.driverStartSB.setValue(self.sets[setIndex].driverStart)
         self.numDriverMSB.setValue(self.sets[setIndex].numDriverM)
         self.numDriverSitesSB.setValue(self.sets[setIndex].numDriverSites)
-        self.advWindow.setLabelSB.setValue(self.sets[setIndex].setLabel)
-        self.advWindow.recIntervalLocalSB.setValue(self.sets[setIndex].recIntervalLocal)
+        self.setLabelSB.setValue(self.sets[setIndex].setLabel)
+        self.recIntervalLocalSB.setValue(self.sets[setIndex].recIntervalLocal)
         self.advWindow.muJSB.setValue(self.sets[setIndex].muJ)
         self.advWindow.muASB.setValue(self.sets[setIndex].muA)
         self.advWindow.betaSB.setValue(self.sets[setIndex].beta)
@@ -505,34 +527,6 @@ class WidgetParams(QWidget):
     def openAdvanced(self):
         """ Opens the advanced parameters window."""
         self.advWindow.openWin()
-        
-    def createScaledRelTimesFile(self, outputDirPath, relTimesFile):
-        """
-        Creates a scaled version of the release times file, with values + 365 (to take into account internal discarding of first year of data).
-        This file will be used by the simulation.
-
-        Parameters
-        ----------
-        outputDirPath : Path
-            Absolute path to the simulation output directory.
-        relTimesFile : str
-            Absolute filepath to user's release times file.
-
-        Returns
-        -------
-        filePath : str
-            Absolute filepath to the scaled release times file.
-
-        """
-        filePath = outputDirPath / "reltimes.txt"
-        relTimes = np.loadtxt(relTimesFile, dtype=int)
-        relTimes = relTimes + 365
-        
-        with open(filePath, "w") as file:
-            for t in relTimes:
-                file.write(str(t) + "\n")
-                
-        return str(filePath)
         
     def createParamsFiles(self, outputDirPath):
         """
@@ -579,12 +573,12 @@ class WidgetParams(QWidget):
                             alpha1 = advParams.alpha1,
                             amp = advParams.amp,
                             resp = advParams.resp,
-                            recStart = self.driverStartSB.value(),
+                            recStart = self.driverStartSB.value() if advParams.relTimesFile == False else advParams.newDriverStart,
                             recEnd = self.maxTSB.value(),
                             recIntervalGlobal = 1,
-                            recIntervalLocal = advParams.recIntervalLocal,
+                            recIntervalLocal = self.recIntervalLocalSB.value(),
                             recSitesFreq = 1,
-                            setLabel = advParams.setLabel,
+                            setLabel = self.setLabelSB.value(),
                             dispType = self.advWindow.dispType,
                             boundaryType = self.advWindow.boundaryType,
                             rainfallFile = None if advParams.rainfallFile == False else self.advWindow.rainfallFile,
@@ -625,9 +619,9 @@ class WidgetParams(QWidget):
                                 recStart = ("output start (full data)", "Start time for the full data recording window. Has been set equal to the release time."),
                                 recEnd = ("output end (full data)", "End time for the full data recording window. Has been set equal to the simulation time."),
                                 recIntervalGlobal = ("output frequency (summary data)", "Time interval for summary data recording. Has been set to 1."),
-                                recIntervalLocal = advParamsInfo.recIntervalLocal,
+                                recIntervalLocal = (self.recIntervalLocalLabel.text(), self.recIntervalLocalLabel.toolTip()),
                                 recSitesFreq = ("local site freq.", "Fraction of sites to collect local data for (1 is all sites. 10 is 1 in 10 etc). Has been set to 1."),
-                                setLabel = advParamsInfo.setLabel,
+                                setLabel = (self.setLabelLabel.text(), self.setLabelLabel.toolTip()),
                                 dispType = advParamsInfo.dispType,
                                 boundaryType = advParamsInfo.boundaryType,
                                 rainfallFile = advParamsInfo.rainfallFile,

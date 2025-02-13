@@ -554,11 +554,7 @@ class WidgetPlotLocal(WidgetPlot):
             self.recEnd = int(params[29])
             self.recIntervalLocal = int(params[31])
             self.plotSlider.setMinimum(0) 
-            print("Slider's recStart:", self.recStart)
-            print("Slider's recEnd:", self.recEnd)
             self.plotSlider.setMaximum(int((self.recEnd - self.recStart + 1) / self.recIntervalLocal)) # recEnd is inclusive
-            print("Slider's max:", self.plotSlider.maximum())
-            print("Slider's min:", self.plotSlider.minimum())
             self.plotSlider.setSingleStep(1)
             self.plotSlider.setPageStep(1) 
             self.plotSlider.setTickInterval(1)

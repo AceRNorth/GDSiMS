@@ -14,8 +14,6 @@ import re
 
 class AdvParams():
     """UI component values for the advanced parameters window. """
-    setLabel = 1
-    recIntervalLocal = 365
     muJ = 0.05
     muA = 0.125
     beta = 100
@@ -45,6 +43,7 @@ class AdvParams():
     gamma = 0.025
     relTimesFile = False
     relTimesFilename = ""
+    newDriverStart = 0
        
 class AdvancedWindow(QDialog):
     """ Contains the simulation's advanced parameter UI components and applies the changes. """
@@ -104,8 +103,6 @@ class AdvancedWindow(QDialog):
         self.hide()
     
         # reset all values to their defaults
-        self.setLabelSB.setValue(self.lastVals.setLabel)
-        self.recIntervalLocalSB.setValue(self.lastVals.recIntervalLocal)
         self.muJSB.setValue(self.lastVals.muJ)
         self.muASB.setValue(self.lastVals.muA)
         self.betaSB.setValue(self.lastVals.beta)
@@ -141,8 +138,6 @@ class AdvancedWindow(QDialog):
         
     def saveValues(self):
         """ Saves the last applied changes to UI parameter box values/states. """
-        self.lastVals.setLabel = self.setLabelSB.value()
-        self.lastVals.recIntervalLocal = self.recIntervalLocalSB.value()
         self.lastVals.muJ = self.muJSB.value()
         self.lastVals.muA = self.muASB.value()
         self.lastVals.beta = self.betaSB.value()
@@ -172,7 +167,11 @@ class AdvancedWindow(QDialog):
         self.lastVals.gamma = self.gammaSB.value()
         self.lastVals.relTimesFile = self.relTimesFileCheckbox.isChecked()
         self.lastVals.relTimesFilename = self.relTimesFilenameEdit.text()
-        
+        if self.relTimesFileCheckbox.isChecked() and Path(self.relTimesFilenameEdit.text()).exists():
+            with open(self.relTimesFilenameEdit.text(), 'r') as file: 
+                lines = file.readlines()
+                self.lastVals.newDriverStart = lines[0]
+
         self.boundaryType = self.lastVals.boundaryType
         self.dispType = self.lastVals.dispType
         self.rainfallFile = self.lastVals.rainfallFilename
@@ -193,30 +192,6 @@ class AdvancedWindow(QDialog):
         """Contains all widgets and sets the layout for the advanced parameters window."""
         self.horizontalGroupBox = QGroupBox()
         self.layout = QGridLayout()
-        
-        recTitle = QLabel("Recording")
-        self.setLabelLabel = QLabel("simulation label")
-        self.setLabelLabel.setToolTip("'Set of repetitions' index label for output files.")
-        self.setLabelSB = QSpinBox()
-        self.setLabelSB.setMaximum(10000000)
-        self.setLabelSB.setValue(1)
-        self.setLabelSB.resize(self.setLabelSB.sizeHint())
-        self.setLabelSB.valueChanged.connect(self.enableApply)
-        self.recIntervalLocalLabel = QLabel("output frequency (full data)")
-        self.recIntervalLocalLabel.setToolTip("Time interval at which to collect/record local data (in days). A low value produces higher temporal resolution data though will result in larger output file sizes.")
-        self.recIntervalLocalSB = QSpinBox()
-        self.recIntervalLocalSB.setMinimum(1)
-        self.recIntervalLocalSB.setMaximum(100000)
-        self.recIntervalLocalSB.setValue(365)
-        self.recIntervalLocalSB.setSingleStep(100)
-        self.recIntervalLocalSB.resize(self.recIntervalLocalSB.sizeHint())
-        self.recIntervalLocalSB.valueChanged.connect(self.enableApply)
-        
-        line1 = QFrame()
-        line1.setFrameShape(QFrame.HLine)
-        pal = line1.palette()
-        pal.setColor(QPalette.WindowText, QColor("lightGray"))
-        line1.setPalette(pal)
         
         lifeTitle = QLabel("Mosquito life processes")
         self.muJLabel = QLabel("juvenile mortality rate")
@@ -274,9 +249,11 @@ class AdvancedWindow(QDialog):
         self.minDevSB.resize(self.minDevSB.sizeHint())
         self.minDevSB.valueChanged.connect(self.enableApply)
     
-        line2 = QFrame()
-        line2.setFrameShape(QFrame.HLine)
-        line2.setPalette(pal)    
+        line1 = QFrame()
+        line1.setFrameShape(QFrame.HLine)
+        pal = line1.palette()
+        pal.setColor(QPalette.WindowText, QColor("lightGray"))
+        line1.setPalette(pal)
     
         dispTitle = QLabel("Dispersal")
         self.dispRateLabel = QLabel("dispersal rate")
@@ -302,9 +279,9 @@ class AdvancedWindow(QDialog):
         self.dispTypeCB.addItems(["Radial", "Distance kernel"])
         self.dispTypeCB.currentTextChanged.connect(self.enableApply)
         
-        line3 = QFrame()
-        line3.setFrameShape(QFrame.HLine)
-        line3.setPalette(pal)
+        line2 = QFrame()
+        line2.setFrameShape(QFrame.HLine)
+        line2.setPalette(pal)
         
         self.aesTitle = QLabel("Aestivation")
         self.aesCheckbox = QCheckBox()
@@ -376,9 +353,9 @@ class AdvancedWindow(QDialog):
         self.tWake2Label.hide()
         self.tWake2SB.hide()
         
-        line4 = QFrame()
-        line4.setFrameShape(QFrame.HLine)
-        line4.setPalette(pal)
+        line3 = QFrame()
+        line3.setFrameShape(QFrame.HLine)
+        line3.setPalette(pal)
         
         seasonalityTitle = QLabel("Seasonality")
         self.alpha0MeanLabel = QLabel("population size factor")
@@ -447,9 +424,9 @@ class AdvancedWindow(QDialog):
         self.respLabel.hide()
         self.respSB.hide()
         
-        line5 = QFrame()
-        line5.setFrameShape(QFrame.HLine)
-        line5.setPalette(pal)
+        line4 = QFrame()
+        line4.setFrameShape(QFrame.HLine)
+        line4.setPalette(pal)
         
         modelAreaTitle = QLabel("Model area")
         self.boundaryTypeLabel = QLabel("boundary type")
@@ -475,9 +452,9 @@ class AdvancedWindow(QDialog):
         self.coordsFilenameEdit.hide()
         coordsFileDialogBtn.hide()
         
-        line6 = QFrame()
-        line6.setFrameShape(QFrame.HLine)
-        line6.setPalette(pal)
+        line5 = QFrame()
+        line5.setFrameShape(QFrame.HLine)
+        line5.setPalette(pal)
         
         inherTitle = QLabel("Gene drive resistance")
         self.gammaLabel = QLabel("resistance formation rate")
@@ -491,9 +468,9 @@ class AdvancedWindow(QDialog):
         self.gammaSB.resize(self.gammaSB.sizeHint())
         self.gammaSB.valueChanged.connect(self.enableApply)
         
-        line7 = QFrame()
-        line7.setFrameShape(QFrame.HLine)
-        line7.setPalette(pal)
+        line6 = QFrame()
+        line6.setFrameShape(QFrame.HLine)
+        line6.setPalette(pal)
         
         releaseTitle = QLabel("Gene drive release")
         self.relTimesFileLabel = QLabel("release times file")
@@ -513,9 +490,9 @@ class AdvancedWindow(QDialog):
         self.relTimesFilenameEdit.hide()
         relTimesFileDialogBtn.hide()
         
-        line8 = QFrame()
-        line8.setFrameShape(QFrame.HLine)
-        line8.setPalette(pal)
+        line7 = QFrame()
+        line7.setFrameShape(QFrame.HLine)
+        line7.setPalette(pal)
         
         self.okBtn = QPushButton("Ok")
         self.okBtn.setToolTip("Accept changes and close dialog.")
@@ -527,12 +504,6 @@ class AdvancedWindow(QDialog):
         self.applyBtn.setEnabled(False)
         self.applyBtn.clicked.connect(lambda: self.applyChanges("apply"))
     
-        self.layout.addWidget(recTitle, 0, 0)
-        self.layout.addWidget(self.setLabelLabel, 1, 0)
-        self.layout.addWidget(self.setLabelSB, 1, 1)
-        self.layout.addWidget(self.recIntervalLocalLabel, 1, 2)
-        self.layout.addWidget(self.recIntervalLocalSB, 1, 3)
-        self.layout.addWidget(line1, 4, 0, 1, 4)
         self.layout.addWidget(lifeTitle, 5, 0)
         self.layout.addWidget(self.muJLabel, 6, 0)
         self.layout.addWidget(self.muJSB, 6, 1)
@@ -546,7 +517,7 @@ class AdvancedWindow(QDialog):
         self.layout.addWidget(self.compPowerSB, 8, 1)
         self.layout.addWidget(self.minDevLabel, 8, 2)
         self.layout.addWidget(self.minDevSB, 8, 3)
-        self.layout.addWidget(line2, 9, 0, 1, 4)
+        self.layout.addWidget(line1, 9, 0, 1, 4)
         self.layout.addWidget(dispTitle, 10, 0)
         self.layout.addWidget(self.dispRateLabel, 11, 0)
         self.layout.addWidget(self.dispRateSB, 11, 1)
@@ -554,7 +525,7 @@ class AdvancedWindow(QDialog):
         self.layout.addWidget(self.maxDispSB, 11, 3)
         self.layout.addWidget(self.dispTypeLabel, 12, 0)
         self.layout.addWidget(self.dispTypeCB, 12, 1, 1, 1)
-        self.layout.addWidget(line3, 13, 0, 1, 4)
+        self.layout.addWidget(line2, 13, 0, 1, 4)
         self.layout.addWidget(self.aesTitle, 14, 0)
         self.layout.addWidget(self.aesCheckbox, 14, 1)
         self.layout.addWidget(self.psiLabel, 15, 0)
@@ -569,7 +540,7 @@ class AdvancedWindow(QDialog):
         self.layout.addWidget(self.tWake1SB, 17, 1)
         self.layout.addWidget(self.tWake2Label, 17, 2)
         self.layout.addWidget(self.tWake2SB, 17, 3)
-        self.layout.addWidget(line4, 18, 0, 1, 4)
+        self.layout.addWidget(line3, 18, 0, 1, 4)
         self.layout.addWidget(seasonalityTitle, 19, 0)
         self.layout.addWidget(self.alpha0MeanLabel, 20, 0)
         self.layout.addWidget(self.alpha0MeanSB, 20, 1)
@@ -585,7 +556,7 @@ class AdvancedWindow(QDialog):
         self.layout.addWidget(rainfallFileDialogBtn, 23, 3)
         self.layout.addWidget(self.respLabel, 24, 0)
         self.layout.addWidget(self.respSB, 24, 1)
-        self.layout.addWidget(line5, 25, 0, 1, 4)
+        self.layout.addWidget(line4, 25, 0, 1, 4)
         self.layout.addWidget(modelAreaTitle, 26, 0)
         self.layout.addWidget(self.boundaryTypeLabel, 27, 0)
         self.layout.addWidget(self.boundaryTypeCB, 27, 1, 1, 1)
@@ -593,17 +564,17 @@ class AdvancedWindow(QDialog):
         self.layout.addWidget(self.coordsFileCheckbox, 28, 1)
         self.layout.addWidget(self.coordsFilenameEdit, 29, 0, 1, 3)
         self.layout.addWidget(coordsFileDialogBtn, 29, 3)
-        self.layout.addWidget(line6, 30, 0, 1, 4)
+        self.layout.addWidget(line5, 30, 0, 1, 4)
         self.layout.addWidget(inherTitle, 31, 0)
         self.layout.addWidget(self.gammaLabel, 32, 0)
         self.layout.addWidget(self.gammaSB, 32, 1)
-        self.layout.addWidget(line7, 33, 0, 1, 4)
+        self.layout.addWidget(line6, 33, 0, 1, 4)
         self.layout.addWidget(releaseTitle, 34, 0)
         self.layout.addWidget(self.relTimesFileLabel, 35, 0)
         self.layout.addWidget(self.relTimesFileCheckbox, 35, 1)
         self.layout.addWidget(self.relTimesFilenameEdit, 36, 0, 1, 3)
         self.layout.addWidget(relTimesFileDialogBtn, 36, 3)
-        self.layout.addWidget(line8, 37, 0, 1, 4)
+        self.layout.addWidget(line7, 37, 0, 1, 4)
         self.layout.addWidget(self.okBtn, 38, 2, 1, 1)
         self.layout.addWidget(self.applyBtn, 38, 3, 1, 1)
         
@@ -611,8 +582,6 @@ class AdvancedWindow(QDialog):
         
     def getParamsInfo(self):
         advSetInfo = AdvParams()
-        advSetInfo.setLabel = (self.setLabelLabel.text(), self.setLabelLabel.toolTip())
-        advSetInfo.recIntervalLocal = (self.recIntervalLocalLabel.text(), self.recIntervalLocalLabel.toolTip())
         advSetInfo.muJ = (self.muJLabel.text(), self.muJLabel.toolTip())
         advSetInfo.muA = (self.muALabel.text(), self.muALabel.toolTip())
         advSetInfo.beta = (self.betaLabel.text(), self.betaLabel.toolTip())

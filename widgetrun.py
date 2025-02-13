@@ -221,7 +221,7 @@ class WidgetRun(QWidget):
         self.runBtn.show()
         self.runBtn.setEnabled(True)
         if abortCode == 0:
-            #self.msgBar.setText("Waiting for run.")
+            self.msgBar.setText("Waiting for run.")
             self.winWidget.runFinished(self.outputPath)
             QMessageBox.information(self, "Info", "Simulation completed successfully!")
         else:
