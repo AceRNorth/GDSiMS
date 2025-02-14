@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QMainWindow, QStyle, QAction, QMessageBox
 from PyQt5.QtGui import QIcon, QFont
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 import webbrowser
 import winwidget
 import advwin
@@ -18,6 +18,52 @@ import advwin
 basefile = Path(__file__)
 basedir = basefile.parents[0]
 appname = "gdsimsapp.exe"
+
+class ErrorCatcher:
+    """Redirects stderr to capture error messages and display in a message box."""
+    
+    def __init__(self):
+        self.oldStderr = sys.stderr  
+        sys.stderr = self  # redirect stderr to this class
+        self.errorBuffer = ""
+        self.timer = QTimer()
+        self.timer.setSingleShot(True)  
+        self.timer.timeout.connect(self.displayErrorPopUp) # show latest error when timer expires
+
+    def write(self, msg):
+        """
+        Intercepts stderr messages and shows only the most recent one in a pop-up.
+
+        Parameters
+        ----------
+        msg : str
+            stderr message.
+
+        """
+        
+        if not msg.isspace():
+            self.errorBuffer = msg  
+            self.timer.start(500) # wait for more messages before displaying pop-up
+
+    def flush(self):
+        """ Required for stderr compatibility. """
+        self.oldStderr.flush()
+        
+    def displayErrorPopUp(self):
+        """Displays the most recent error message in a pop-up with an expandable details section."""
+        if self.errorBuffer and not self.errorBuffer.isspace():
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Critical)
+            msgBox.setText("An error occurred")
+        
+            # Short preview in main message and full message in details section
+            shortMsg = self.errorBuffer[:300] + ("..." if len(self.errorBuffer) > 300 else "")
+            msgBox.setInformativeText(shortMsg)
+            msgBox.setDetailedText(self.errorBuffer)
+        
+            msgBox.setWindowTitle("Error")
+            msgBox.exec_()
+            self.errorBuffer = "" # clear buffer
 
 class MainWindow(QMainWindow):
     """ GUI main window frame. """
@@ -49,6 +95,9 @@ class MainWindow(QMainWindow):
         docsAction.setStatusTip("Open the project documentation website")
         helpMenu.addAction(docsAction)
         menu.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
+        
+        # Activate the error catcher at the start of your application
+        self.errorCatcher = ErrorCatcher()
         
     def closeEvent(self, event):
         """
