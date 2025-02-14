@@ -714,10 +714,10 @@ class AdvancedWindow(QDialog):
         if self.aesCheckbox.isChecked():
             if self.tHide2SB.value() < self.tHide1SB.value():
                 errs += 1
-                errMsgs.append("t_hide2 must be equal to or larger than t_hide1.")
+                errMsgs.append("The end hiding date must be equal to or larger than the start hiding date.")
             if self.tWake2SB.value() < self.tWake1SB.value():
                 errs += 1
-                errMsgs.append("t_wake2 must be equal to or larger than t_wake1.")
+                errMsgs.append("The end waking date must be equal to or larger than the start waking date.")
         
         # read files and check values        
         if self.rainfallFileCheckbox.isChecked():
@@ -727,7 +727,7 @@ class AdvancedWindow(QDialog):
             else:
                 try:
                     rfData = np.loadtxt(self.rainfallFilenameEdit.text(), dtype=np.float64)
-                    if len(rfData) == 365 or len(rfData) == maxT:
+                    if len(rfData) == 365 or (len(rfData) == maxT and maxT >= 365):
                         for i in range(0, len(rfData)):
                             dp = rfData[i]
                             if dp < 0:
@@ -735,7 +735,7 @@ class AdvancedWindow(QDialog):
                                 errMsgs.append("Rainfall value r for day {} is out of bounds r ≥ 0.".format(i+1))
                     else:
                         errs += 1
-                        errMsgs.append("The number of daily rainfall values in the file is not 365 or max_t.")
+                        errMsgs.append("The number of daily rainfall values in the file is not 365 or equal to simulation time (where max_t ≥ 365).")
                 except Exception as e:
                     errs += 1
                     errMsgs.append("An error occured with the rainfall file: {}".format(e))
@@ -750,7 +750,7 @@ class AdvancedWindow(QDialog):
                     lines = file.readlines()
                     if len(lines) != numPat:
                         errs += 1
-                        errMsgs.append("The number of patch coordinates in the file does not match num_pat.")
+                        errMsgs.append("The number of patch coordinates in the file does not match the parameter for number of patches.")
                     else:
                         for i in range(0, len(lines)):
                             line = lines[i].strip() # strip surrounding whitespace
