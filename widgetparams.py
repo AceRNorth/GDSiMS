@@ -66,7 +66,7 @@ class WidgetParams(QWidget):
         self.maxTSB = QSpinBox()
         self.maxTSB.setMinimum(1)
         self.maxTSB.setMaximum(10000)
-        self.maxTSB.setValue(1000)
+        self.maxTSB.setValue(1500)
         self.maxTSB.setSingleStep(100)
         self.maxTSB.resize(self.maxTSB.sizeHint())
         self.numPatLabel = QLabel("no. of patches")
@@ -200,7 +200,7 @@ class WidgetParams(QWidget):
         # set 1 - default
         set1 = params.InputParams(
                 numRuns = 1, 
-                maxT = 1000,
+                maxT = 1500,
                 numPat = 100,
                 muJ = 0.05,
                 muA = 0.125,
@@ -228,7 +228,7 @@ class WidgetParams(QWidget):
                 amp = 0.0,
                 resp = 0.0,
                 recStart = 200,
-                recEnd = 1000,
+                recEnd = 1500,
                 recIntervalGlobal = 1,
                 recIntervalLocal = 365,
                 recSitesFreq = 1,
@@ -242,7 +242,7 @@ class WidgetParams(QWidget):
         # set 2 - low fitness cost
         set2 = params.InputParams(
                 numRuns = 1, 
-                maxT = 1000,
+                maxT = 1500,
                 numPat = 100,
                 muJ = 0.05,
                 muA = 0.125,
@@ -270,7 +270,7 @@ class WidgetParams(QWidget):
                 amp = 0.0,
                 resp = 0.0,
                 recStart = 200,
-                recEnd = 1000,
+                recEnd = 1500,
                 recIntervalGlobal = 1,
                 recIntervalLocal = 365,
                 recSitesFreq = 1,
@@ -284,7 +284,7 @@ class WidgetParams(QWidget):
         # set 3 - high fitness cost
         set3 = params.InputParams(
                 numRuns = 1, 
-                maxT = 1000,
+                maxT = 1500,
                 numPat = 100,
                 muJ = 0.05,
                 muA = 0.125,
@@ -312,7 +312,7 @@ class WidgetParams(QWidget):
                 amp = 0.0,
                 resp = 0.0,
                 recStart = 200,
-                recEnd = 1000,
+                recEnd = 1500,
                 recIntervalGlobal = 1,
                 recIntervalLocal = 365,
                 recSitesFreq = 1,
@@ -326,7 +326,7 @@ class WidgetParams(QWidget):
         # set 4 - high number of release sites
         set4 = params.InputParams(
                 numRuns = 1, 
-                maxT = 1000,
+                maxT = 1500,
                 numPat = 100,
                 muJ = 0.05,
                 muA = 0.125,
@@ -354,7 +354,7 @@ class WidgetParams(QWidget):
                 amp = 0.0,
                 resp = 0.0,
                 recStart = 200,
-                recEnd = 1000,
+                recEnd = 1500,
                 recIntervalGlobal = 1,
                 recIntervalLocal = 365,
                 recSitesFreq = 1,
@@ -368,7 +368,7 @@ class WidgetParams(QWidget):
         # set 5 - low dispersal rate
         set5 = params.InputParams(
                 numRuns = 1, 
-                maxT = 1000,
+                maxT = 1500,
                 numPat = 100,
                 muJ = 0.05,
                 muA = 0.125,
@@ -396,7 +396,7 @@ class WidgetParams(QWidget):
                 amp = 0.0,
                 resp = 0.0,
                 recStart = 200,
-                recEnd = 1000,
+                recEnd = 1500,
                 recIntervalGlobal = 1,
                 recIntervalLocal = 365,
                 recSitesFreq = 1,
@@ -410,7 +410,7 @@ class WidgetParams(QWidget):
         # set 6 - high dispersal rate
         set6 = params.InputParams(
                 numRuns = 1, 
-                maxT = 1000,
+                maxT = 1500,
                 numPat = 100,
                 muJ = 0.05,
                 muA = 0.125,
@@ -438,7 +438,7 @@ class WidgetParams(QWidget):
                 amp = 0.0,
                 resp = 0.0,
                 recStart = 200,
-                recEnd = 1000,
+                recEnd = 1500,
                 recIntervalGlobal = 1,
                 recIntervalLocal = 365,
                 recSitesFreq = 1,
