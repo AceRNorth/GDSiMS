@@ -82,11 +82,14 @@ class Simulation(QObject):
         if errs: 
             self.error.emit(errs)
             self.process.terminate()
+            os.chdir(gdsimsgui.basedir)
         else: # don't let finished signal emit if have errors
             self.process.wait()
             self.finished.emit()
+            os.chdir(gdsimsgui.basedir)
             
     def abort(self):
         """ Aborts the simulation. """
         if self.process:
-            self.process.terminate()        
+            self.process.terminate()
+            os.chdir(gdsimsgui.basedir)
