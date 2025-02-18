@@ -83,66 +83,72 @@ class WidgetRun(QWidget):
             
     def runSim(self):
         """ Sets up the simulation run on a separate thread."""
-        validDir = self.createOutputDir(self.outputDirNameEdit.text(), self.simNameEdit.text())
-        if validDir:
-            self.winWidget.runStarted()
-            customSet = self.winWidget.createParamsFiles(self.outputPath)
-            
-            # Set up progress bar
-            self.progBar.setMinimum(0)
-            self.progBar.setMaximum(customSet.numRuns * (customSet.maxT+1))
-            self.progBar.reset()
-            
-            # Create simulation run thread
-            self.simThread = QThread()
-            self.simulation = sim.Simulation(self.outputPath,
-                                         self.simName,
-                                         customSet.dispType, 
-                                         customSet.boundaryType,
-                                         customSet.rainfallFile,
-                                         customSet.coordsFile,
-                                         customSet.relTimesFile
-                                         )
-            self.simulation.moveToThread(self.simThread)
-            
-            # Create progress reader thread
-            self.progThread = QThread()
-            outputFiles = [] 
-            for i in range(1, customSet.numRuns + 1): # find filepaths to read for each run
-                filePath = os.path.join(self.outputPath, "output_files", "Totals{}run{}.txt").format(customSet.setLabel, i)
-                outputFiles.append(filePath)
-            self.progReader = ProgressReader(outputFiles, customSet.maxT, customSet.numRuns)
-            self.progReader.moveToThread(self.progThread)
-            
-            # Connect signals and slots
-            self.simThread.started.connect(self.simulation.run)
-            self.simulation.finished.connect(self.simThread.quit)
-            self.simulation.finished.connect(self.simulation.deleteLater)
-            self.simThread.finished.connect(self.simThread.deleteLater)
-            self.simulation.error.connect(self.runError)
-            
-            self.progThread.started.connect(self.progReader.run)
-            self.progReader.finished.connect(self.progThread.quit)
-            self.progReader.finished.connect(self.progReader.deleteLater)
-            self.progThread.finished.connect(self.progThread.deleteLater)
-            self.progReader.progress.connect(lambda v: self.updateProg(v, customSet.maxT, customSet.numRuns))
-    
-            # Start threads
-            self.abortCode = 0
-            self.simThread.start()
-            self.progThread.start()
-            
-            # Disable and hide run button while subprocess is running and enable abort button in its place
-            self.runBtn.setEnabled(False)
-            self.runBtn.hide()
-            self.abortBtn.setEnabled(True)
-            self.abortBtn.show()
-            self.simThread.finished.connect(lambda: self.runFinished(self.abortCode))
-    
-            # Start the QTimer to read the output file periodically
-            # self.timer = QTimer(self)
-            # self.timer.timeout.connect(self.read_output_file)
-            # self.timer.start(1000)  # Check for new output every 1 second
+        areValidParams, errMsgs = self.winWidget.validParams()
+        if not areValidParams:
+            # pop-up with warning message
+            errMsgs = "\n".join(errMsgs)
+            QMessageBox.warning(self, "Invalid parameter(s)", errMsgs)
+        else:
+            validDir = self.createOutputDir(self.outputDirNameEdit.text(), self.simNameEdit.text())
+            if validDir:
+                self.winWidget.runStarted()
+                customSet = self.winWidget.createParamsFiles(self.outputPath)
+                
+                # Set up progress bar
+                self.progBar.setMinimum(0)
+                self.progBar.setMaximum(customSet.numRuns * (customSet.maxT+1))
+                self.progBar.reset()
+                
+                # Create simulation run thread
+                self.simThread = QThread()
+                self.simulation = sim.Simulation(self.outputPath,
+                                             self.simName,
+                                             customSet.dispType, 
+                                             customSet.boundaryType,
+                                             customSet.rainfallFile,
+                                             customSet.coordsFile,
+                                             customSet.relTimesFile
+                                             )
+                self.simulation.moveToThread(self.simThread)
+                
+                # Create progress reader thread
+                self.progThread = QThread()
+                outputFiles = [] 
+                for i in range(1, customSet.numRuns + 1): # find filepaths to read for each run
+                    filePath = os.path.join(self.outputPath, "output_files", "Totals{}run{}.txt").format(customSet.setLabel, i)
+                    outputFiles.append(filePath)
+                self.progReader = ProgressReader(outputFiles, customSet.maxT, customSet.numRuns)
+                self.progReader.moveToThread(self.progThread)
+                
+                # Connect signals and slots
+                self.simThread.started.connect(self.simulation.run)
+                self.simulation.finished.connect(self.simThread.quit)
+                self.simulation.finished.connect(self.simulation.deleteLater)
+                self.simThread.finished.connect(self.simThread.deleteLater)
+                self.simulation.error.connect(self.runError)
+                
+                self.progThread.started.connect(self.progReader.run)
+                self.progReader.finished.connect(self.progThread.quit)
+                self.progReader.finished.connect(self.progReader.deleteLater)
+                self.progThread.finished.connect(self.progThread.deleteLater)
+                self.progReader.progress.connect(lambda v: self.updateProg(v, customSet.maxT, customSet.numRuns))
+        
+                # Start threads
+                self.abortCode = 0
+                self.simThread.start()
+                self.progThread.start()
+                
+                # Disable and hide run button while subprocess is running and enable abort button in its place
+                self.runBtn.setEnabled(False)
+                self.runBtn.hide()
+                self.abortBtn.setEnabled(True)
+                self.abortBtn.show()
+                self.simThread.finished.connect(lambda: self.runFinished(self.abortCode))
+        
+                # Start the QTimer to read the output file periodically
+                # self.timer = QTimer(self)
+                # self.timer.timeout.connect(self.read_output_file)
+                # self.timer.start(1000)  # Check for new output every 1 second
         
     def abortSim(self):
        """ Aborts the simulation run. """

@@ -113,6 +113,10 @@ class WindowWidget(QWidget):
         """
         self.paramSpace.copyAdvFiles(outputDir)
     
+    def validParams(self):
+        isValid, errMsgs = self.paramSpace.validParams()
+        return (isValid, errMsgs)
+    
     def runStarted(self):
         """ Makes changes to all plotspace components after a simulation run has started. """
         for plot in self.plotSpaces:

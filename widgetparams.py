@@ -528,6 +528,33 @@ class WidgetParams(QWidget):
         """ Opens the advanced parameters window."""
         self.advWindow.openWin()
         
+    def validParams(self):
+        """
+        Checks the validity of parameters, including intervals and other sanity checks.
+
+        Returns
+        -------
+        isValid : bool
+            Whether all the parameters are valid.
+        errMsgs : list:string
+            Error messages.
+
+        """
+        errs = 0 
+        errMsgs = []
+
+        if self.driverStartSB.value() >= self.maxTSB.value():
+            errs += 1
+            errMsgs.append("The release time must be smaller than the simulated time.")
+        if self.numDriverSitesSB.value() > self.numPatSB.value():
+            errs += 1
+            errMsgs.append("The number of release patches must be smaller or equal to the number of patches.")
+        
+        isValid = True
+        if errs != 0:
+            isValid = False
+        return (isValid, errMsgs)   
+        
     def createParamsFiles(self, outputDirPath):
         """
         Creates a parameters file for the simulation run in the selected simulation output directory using the current UI parameter values.

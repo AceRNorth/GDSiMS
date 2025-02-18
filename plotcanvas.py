@@ -376,7 +376,11 @@ class LocalPlotCanvas(PlotCanvas):
         ind, x, y = np.loadtxt(coordsFile, skiprows=2, unpack=True)
         numRecPats = len(x) 
         localData = np.loadtxt(localFile, skiprows=2) # get populations 
-        recIntervalLocal = int(localData[numRecPats, 0]) - int(localData[0, 0])
+        
+        if len(localData) > numRecPats:
+            recIntervalLocal = int(localData[numRecPats, 0]) - int(localData[0, 0])
+        else:
+            recIntervalLocal = 0
         self.simDay = int(localData[t*numRecPats, 0]) # get populations on one day, t+1 because always ignore initialisation day
         localDataDay = localData[t*numRecPats:((t+1)*numRecPats), 2:8]
 
@@ -400,7 +404,6 @@ class LocalPlotCanvas(PlotCanvas):
 
         # make a scatter plot with drive frequency colour map
         self.scat = self.axes.scatter(x, y, c=driveFreq, cmap=self.cmap, norm=self.cnorm, marker='.')
-        # discarded days have already not been locally recorded (due to internal rescaling of recStart) but still need to rescale sim day value
         self.annotation.set_text("t = {}".format((t * recIntervalLocal) + recStart))
         self.axes.set_xlabel("x")
         self.axes.set_ylabel("y")
