@@ -182,28 +182,38 @@ class WidgetRun(QWidget):
             Whether the parent directory filepath is a valid directory.
 
         """
-        isValidDir = False
+        isValidDir = True
+        outputPath = Path()
+        errMsgs = []
         if Path(dirPath).is_dir() or dirPath == "":
             if dirPath == "":
                 dirPath = gdsimsgui.basedir
             
             if simName != "":
-                self.outputPath = Path(dirPath) / Path(simName)
+                outputPath = Path(dirPath) / Path(simName)
             else:
                 dt = datetime.now()
                 simName = str(dt.year) + "_" + str(dt.month) + "_" + "{:02d}".format(dt.day)
                 simName +=  "_" + "{:02d}".format(dt.hour) + "{:02d}".format(dt.minute) + "{:02d}".format(dt.second)
-                self.outputPath = Path(dirPath) / simName
+                outputPath = Path(dirPath) / simName
             
-            if not self.outputPath.exists():
-                os.makedirs(self.outputPath)
-                
-            self.simName = simName
-            isValidDir = True
-            
+            # check if the directory has already been used for simulations
+            if not Path(outputPath / "params.txt").exists():
+                self.outputPath = outputPath
+                self.simName = simName
+                if not self.outputPath.exists():
+                    os.makedirs(self.outputPath)
+            else:
+                errMsgs.append("The selected simulation directory has already been used to run a simulation. Please select a different one.")
+         
         else:
-            QMessageBox.critical(self, "Error", "The output directory path does not exist.")
+            errMsgs.append("The output directory path does not exist.")
+            
+        if len(errMsgs) != 0:  
             isValidDir = False
+            errMsgs = "\n".join(errMsgs)
+            QMessageBox.warning(self, "Warning", errMsgs)
+        
         return isValidDir
         
     def runFinished(self, abortCode):
