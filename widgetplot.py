@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QWidget, QComboBox, QPushButton, QCheckBox, QGridLay
 from PyQt5.QtCore import Qt, QTimer, QSize, QThread
 from PyQt5.QtGui import QColor, QPalette
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavBar
+import matplotlib.animation as animation
 import os
 import re
 import numpy as np
@@ -521,9 +522,12 @@ class WidgetPlotLocal(WidgetPlot):
             
             # Disable run button and start thread to save animation
             self.parent.saveAnimStarted()
+            self.anim = animation.FuncAnimation(fig=fig, func=self.canvas.plot,
+                                           fargs=(self.curCoordsFile, self.curLocalFile, self.recStart),
+                                           frames=numFrames, interval=interval, repeat=False)
+            
             self.thread = QThread()
-            self.animf = AnimSaver(fname, fig, self.canvas.plot, numFrames, interval, self.curCoordsFile, 
-                                   self.curLocalFile, self.recStart)
+            self.animf = AnimSaver(fname, self.anim)
             self.animf.moveToThread(self.thread)
             
             # Connect signals and slots

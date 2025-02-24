@@ -22,7 +22,6 @@ class ProgressReader(QObject):
         self.totalSteps = numRuns * maxT
         self.running = True
         self.timer = QTimer(self)
-        #self.timer.timeout.connect(self.updateAnim)
 
     def run(self):
         for i in range(0, len(self.files)):
