@@ -7,6 +7,7 @@ Created on Mon Jan  6 14:14:15 2025
 
 from PyQt5.QtCore import QObject, pyqtSignal
 import subprocess
+import sys
 import os
 import gdsimsgui
 
@@ -74,8 +75,30 @@ class Simulation(QObject):
         # Run C++ model with input data
         os.chdir(self.outputPath) # directory for output files
         env = os.environ.copy()
-        env["PATH"] = r"C:\msys64\mingw64\bin;" + env["PATH"]
-        self.process = subprocess.Popen([self.exeFilepath], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
+        # Ensure process runs without creating a console window
+        if sys.platform == "win32":
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            self.process = subprocess.Popen(
+                [self.exeFilepath],
+                stdin = subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                startupinfo=startupinfo,
+                creationflags=subprocess.CREATE_NO_WINDOW,
+                text=True,
+                env=env
+            )
+        else:
+            self.process = subprocess.Popen(
+                [self.exeFilepath],
+                stdin = subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                start_new_session=True,
+                text=True,
+                env=env
+            )
         outs, errs = self.process.communicate(input=inputString)
         # check for errors whilst process is running and emit error signal
         # (can't use except because cerrs, not subprocess errs)
