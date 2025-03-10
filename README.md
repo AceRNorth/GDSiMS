@@ -52,8 +52,10 @@ The GUI provides features to enter model parameters, run the model program and v
 
 2. Select an output data destination directory and choose the name for your simulation before clicking Run. The interface will give updates on the simulation’s progress whilst it’s running, and plotting options will become available upon completion of the simulation. 
 
-Note: By default, the output files will be created in the ```_internal``` directory.
+   Note: By default, the output files will be created in the ```_internal``` directory.
 
 3. Choose from the tabs to view different plot and animation options, interact via the plot sidebar to select plotting parameters and click Plot or Play to update the canvas.
+
+![GDSiMS_GUI_snapshot](https://github.com/user-attachments/assets/7b1cd53d-ab03-4e9b-adec-adc0c0ca0b77)
 
 
