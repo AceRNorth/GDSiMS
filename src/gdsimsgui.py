@@ -18,6 +18,10 @@ import advwin
 basefile = Path(__file__)
 basedir = basefile.parents[0]
 appname = Path(basedir / "model" / "gdsimsapp_win.exe")
+if sys.platform == "win32":
+	appname = Path(basedir / "model" / "gdsimsapp_win.exe")
+elif sys.platform == "darwin":
+	appname = Path(basedir / "model" / "gdsimsapp_mac")
 
 class ErrorCatcher:
     """Redirects stderr to capture error messages and display in a message box."""
