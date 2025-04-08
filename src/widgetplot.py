@@ -6,16 +6,16 @@ Created on Mon Jan  6 14:03:49 2025
 """
 
 from PyQt5.QtWidgets import QWidget, QComboBox, QPushButton, QCheckBox, QGridLayout, QVBoxLayout, QGroupBox, QFrame, QSlider, QLabel, QStyle, QSpinBox, QFileDialog, QMessageBox
-from PyQt5.QtCore import Qt, QTimer, QSize, QThread
+from PyQt5.QtCore import Qt, QTimer, QSize
 from PyQt5.QtGui import QColor, QPalette
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavBar
-import matplotlib.animation as animation
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from PIL import Image
 import os
 import re
 import numpy as np
 import plotcanvas
 import gdsimsgui
-from animsaver import AnimSaver
 
 class WidgetPlot(QWidget): # widget containing plotcanvas and toolbar in same place
     """Contains the plotspace and plot interaction components."""
@@ -362,6 +362,8 @@ class WidgetPlotLocal(WidgetPlot):
         self.recIntervalLocal = 1
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.updateAnim)
+        self.shouldSaveAnim = False
+        self.snapshots = []
         
     def createGridLayout(self):
         """ Places UI components on a grid layout. """
@@ -405,7 +407,7 @@ class WidgetPlotLocal(WidgetPlot):
         self.saveBtn = QPushButton("Save")
         self.saveBtn.setMinimumHeight(40)
         self.saveBtn.setEnabled(False)
-        self.saveBtn.clicked.connect(self.saveAnim)
+        self.saveBtn.clicked.connect(self.saveAnimStart)
     
         interactLayout.addWidget(self.runsCB)
         interactLayout.addWidget(line1)
@@ -502,42 +504,43 @@ class WidgetPlotLocal(WidgetPlot):
         self.frame = 0
         self.interval = self.intervalSB.value()
         self.canvas.setMode('animation')
+        self.snapshots = []
         self.timer.start(self.interval)  # frame interval (ms)
         
     def updateAnim(self):
         """ Updates the animation snapshot displayed. """
         if self.frame <= self.numFrames:
-            self.canvas.plot(self.frame, self.curCoordsFile, self.curLocalFile, self.recStart)
+            fig = self.canvas.plot(self.frame, self.curCoordsFile, self.curLocalFile, self.recStart)
+            if self.shouldSaveAnim:
+                aggCanvas = FigureCanvasAgg(fig)
+                aggCanvas.draw() # render
+                buf = aggCanvas.buffer_rgba()
+                w, h = aggCanvas.get_width_height()
+                arr = np.frombuffer(buf, dtype=np.uint8).reshape((h, w, 4))
+                img = Image.fromarray(arr)
+                self.snapshots.append(img.copy()) # need to copy image to freeze the current image
             self.frame += 1
         else:
             self.timer.stop()
+            if self.shouldSaveAnim:
+                self.saveAnimProcess()
             
-    def saveAnim(self):
+    def saveAnimStart(self):
         """ Saves the animation as a file on a separate thread. """
         fname, filt = QFileDialog.getSaveFileName(self, "Save animation", str(gdsimsgui.basedir), "*.gif")
-        if fname and not fname.isspace(): # check dialog hasn't been cancelled (which would return a null string)   
-            fig = self.canvas.getFig()
-            numFrames = (int((self.recEnd - self.recStart) / self.recIntervalLocal)) + 1 # +1 because range(frames) used in FuncAnimation
-            interval = self.intervalSB.value()
-            
+        if fname and not fname.isspace(): # check dialog hasn't been cancelled (which would return a null string)  
+            self.animFilename = fname
             # Disable run button and start thread to save animation
             self.parent.saveAnimStarted()
-            self.anim = animation.FuncAnimation(fig=fig, func=self.canvas.plot,
-                                           fargs=(self.curCoordsFile, self.curLocalFile, self.recStart),
-                                           frames=numFrames, interval=interval, repeat=False)
-            
-            self.thread = QThread()
-            self.animf = AnimSaver(fname, self.anim)
-            self.animf.moveToThread(self.thread)
-            
-            # Connect signals and slots
-            self.thread.started.connect(self.animf.run)
-            self.animf.finished.connect(self.thread.quit)
-            self.animf.finished.connect(self.animf.deleteLater)
-            
-            self.thread.start()
+            self.shouldSaveAnim = True
             self.saveBtn.setEnabled(False)
-            self.thread.finished.connect(self.saveAnimFinished)
+            self.startAnim()
+            
+    def saveAnimProcess(self):  
+        self.shouldSaveAnim = False
+        self.snapshots[0].save(self.animFilename, save_all=True, append_images=self.snapshots[1:], optimize=False, duration=self.interval, loop=1)
+        self.snapshots = []
+        self.saveAnimFinished()
         
     def saveAnimFinished(self):
         """ Makes necessary changes to UI after animation file has been saved. """
@@ -547,7 +550,7 @@ class WidgetPlotLocal(WidgetPlot):
         
     def updateSlider(self, outputDir):
         """ 
-         Updates the slider range and scale factors for the most recent simulation run.  
+         Updates the slider r+ange and scale factors for the most recent simulation run.  
          
          Parameters
          ----------

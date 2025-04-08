@@ -14,7 +14,6 @@ import numpy as np
 
 class PlotCanvas(FigureCanvas):
     """Creates a plot figure. """
-    
     def __init__(self, parent=None, width=5, height=4, dpi=100, colorbar=False, annot=False):
         """
         Parameters
@@ -412,4 +411,6 @@ class LocalPlotCanvas(PlotCanvas):
         self.axes.minorticks_on() # need it for animation saving to work
         self.draw()      
         
-        return self.scat
+        return self.fig
+    
+    
