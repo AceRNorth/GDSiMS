@@ -26,24 +26,58 @@ The model program is best suited to advanced users in need of quick custom param
 Both are freely available on their respective GitHub repositories, have an open-source licence and aim to have a documentation website with tutorials (tutorials for the GUI are in progress).
 
 ## Installation
-GDSiMS is currently only available for Windows 10, 11. Testing for other systems is in progress.
+GDSiMS is currently available for Windows 10 and 11 and macOS.
 
+### Windows
 1. Download the files:
    
    i. Clone the repository via Git Bash (recommended):
    
-      Install Git Bash and open. Navigate to your chosen directory and run this command to clone the repository:
-     ```bash
-     cd C:\Users\MyUser\Projects
-     git clone https://github.com/AceRNorth/GDSiMS.git
-     ```
+      Install [Git Bash](https://git-scm.com/downloads) and download [Git LFS](https://git-lfs.com/). Open Git Bash and finish installing Git LFS by running this command:
+
+      ```bash
+      git lfs install
+      ```
+      
+      Navigate to your chosen directory and run this command to clone the repository:
+   
+      ```bash
+      cd C:\Users\MyUser\Projects
+      git clone https://github.com/AceRNorth/GDSiMS.git
+      ```
    ii. Alternatively, download the files as a ZIP folder, unzip and move to your chosen directory.
    
    ![GDSiMS_installation_download_zip](https://github.com/user-attachments/assets/617f44d3-3d69-4bc3-9b3e-c21cd307a923)
 
-2. Open the ```dist_win/GDSiMS``` directory and run the GDSiMS executable file.
+3. Open the ```dist_win/GDSiMS``` directory and run the GDSiMS executable file.
    
-   Note: Windows Defender may pop up when attempting to run the executable. This is because it doesn’t recognise the distributor. The application is safe, so you     can click on ‘More info’ and then ‘Run anyway’.
+   Note: Windows Defender may pop up when attempting to run the executable. This is because it doesn’t recognise the distributor. The application is safe, so you can click on ‘More info’ and then ‘Run anyway’.
+
+### Mac
+
+1. Install [Homebrew](https://git-scm.com/downloads) and [Git](https://git-scm.com/downloads/mac) if not already installed. This can be easily done by opening a terminal window and running these two commands:
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   brew install git
+   ```
+   Then, install [Git LFS](https://git-lfs.com/):
+   ```bash
+   brew install git-lfs
+   ```
+   
+2. Navigate to your chosen directory and clone the repository:
+   ```bash
+   cd /Users/username/Documents/
+   git clone https://github.com/AceRNorth/GDSiMS.git
+   ```
+   Note: Mac users must clone the repository. ZIP downloading will not work due to the way the large .dmg file has been stored on GitHub.
+
+3. Open the ```dist_mac/``` directory and run the ```GDSiMS.dmg``` file.
+   
+   i. The .dmg file will open a prompt, asking you to drag the GDSiMS application into your Applications directory. This will install it as an app onto your system, and you can open the app via the Applications directory.
+
+   ![install_mac_drag_app](https://github.com/user-attachments/assets/64ff68e2-5e6a-47ed-bbf1-b38f88fd53bb)
+
 
 ## Usage
 The GUI provides features to enter model parameters, run the model program and view the output data. 
@@ -52,10 +86,11 @@ The GUI provides features to enter model parameters, run the model program and v
 
 2. Select an output data destination directory and choose the name for your simulation before clicking Run. The interface will give updates on the simulation’s progress whilst it’s running, and plotting options will become available upon completion of the simulation. 
 
-   Note: By default, the output files will be created in the ```_internal``` directory.
+   Note: By default, the output files will be created in the ```_internal``` subdirectory for Windows, and in the app's ```Contents/Frameworks/``` subdirectory for Mac. You can access the app's contents on Mac by right-clicking on the GDSiMS app in your Applications directory and choosing "Show Package Contents".
 
-3. Choose from the tabs to view different plot and animation options, interact via the plot sidebar to select plotting parameters and click Plot or Play to update the canvas.
+4. Choose from the tabs to view different plot and animation options, interact via the plot sidebar to select plotting parameters and click Plot or Play to update the canvas.
 
 ![GDSiMS_GUI_snapshot](https://github.com/user-attachments/assets/7b1cd53d-ab03-4e9b-adec-adc0c0ca0b77)
+
 
 
