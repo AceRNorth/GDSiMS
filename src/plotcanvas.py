@@ -152,7 +152,7 @@ class TotalsGenPlotCanvas(PlotCanvas):
         """
     
         self.axes.clear() # clears plot on the plot canvas before plotting the new curve(s)
-        totals = np.loadtxt(file, skiprows=2)
+        totals = np.loadtxt(file, skiprows=2, ndmin=2)
         times = totals[0:, 0] 
         total_males = totals[0:, 1:]
         for line in lines:  # keep same colours for same type of line
@@ -231,7 +231,7 @@ class TotalsAllelePlotCanvas(PlotCanvas):
         """
     
         self.axes.clear() # clears plot on the plot canvas before plotting the new curve(s)
-        totals = np.loadtxt(file, skiprows=2)
+        totals = np.loadtxt(file, skiprows=2, ndmin=2)
         times = totals[0:, 0]
         total_males = totals[0:, 1:]
         WW = total_males[:, 0]
@@ -316,12 +316,18 @@ class CoordsPlotCanvas(PlotCanvas):
         None.
         """
         self.axes.clear() 
-        data = np.loadtxt(file, skiprows=2)
+        data = np.loadtxt(file, skiprows=2, ndmin=2)
         x = data[:, 1]
         y = data[:, 2]
         self.axes.scatter(x, y, marker='.', color="peru")
-        self.axes.set_xlim(np.amin(x), np.amax(x))
-        self.axes.set_ylim(np.amin(y), np.amax(y))
+        if len(x) == 1:
+            self.axes.set_xlim(x - x/2, x + x/2)
+        else:
+            self.axes.set_xlim(np.amin(x), np.amax(x))
+        if len(y) == 1:
+            self.axes.set_ylim(y - y/2, y + y/2)
+        else:
+            self.axes.set_ylim(np.amin(y), np.amax(y))
         self.axes.set_xlabel("x")
         self.axes.set_ylabel("y")
         self.draw()
@@ -372,9 +378,9 @@ class LocalPlotCanvas(PlotCanvas):
         scat : matplotlib.collections.PathCollection (scatter points)
         """
         self.axes.clear() 
-        ind, x, y = np.loadtxt(coordsFile, skiprows=2, unpack=True)
+        ind, x, y = np.loadtxt(coordsFile, skiprows=2, ndmin=2, unpack=True)
         numRecPats = len(x) 
-        localData = np.loadtxt(localFile, skiprows=2) # get populations 
+        localData = np.loadtxt(localFile, skiprows=2, ndmin=2) # get populations 
         
         if len(localData) > numRecPats:
             recIntervalLocal = int(localData[numRecPats, 0]) - int(localData[0, 0])
@@ -406,8 +412,14 @@ class LocalPlotCanvas(PlotCanvas):
         self.annotation.set_text("t = {}".format((t * recIntervalLocal) + recStart))
         self.axes.set_xlabel("x")
         self.axes.set_ylabel("y")
-        self.axes.set_xlim(np.amin(x), np.amax(x))
-        self.axes.set_ylim(np.amin(y), np.amax(y))
+        if len(x) == 1:
+            self.axes.set_xlim(x - x/2, x + x/2)
+        else:
+            self.axes.set_xlim(np.amin(x), np.amax(x))
+        if len(y) == 1:
+            self.axes.set_ylim(y - y/2, y + y/2)
+        else:
+            self.axes.set_ylim(np.amin(y), np.amax(y))
         self.axes.minorticks_on() # need it for animation saving to work
         self.draw()      
         
