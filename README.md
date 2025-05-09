@@ -65,16 +65,16 @@ GDSiMS is currently available for Windows 10 and 11 and ARM-based macOS (Apple S
    brew install git-lfs
    ```
    
-2. Navigate to your chosen directory and clone the repository:
+2. Navigate to your chosen directort and clone the repository:
    ```bash
    cd /Users/username/Documents/
    git clone https://github.com/AceRNorth/GDSiMS.git
    ```
    Note: Mac users must clone the repository. ZIP downloading will not work due to the way the large .dmg file has been stored on GitHub.
 
-3. Open the ```dist_mac/``` directory and run the ```GDSiMS.dmg``` file.
+3. Open your chosen folder on the Finder and click on the ```dist_mac``` folder and then on the ```GDSiMS.dmg``` file.
    
-   i. The .dmg file will open a prompt, asking you to drag the GDSiMS application into your Applications directory. This will install it as an app onto your system, and you can open the app via the Applications directory.
+   i. The .dmg file will open a prompt, asking you to drag the GDSiMS application into your Applications directory (you have to physically drag the icon into the other icon). This will install it as an app onto your system, and you can then find the app in your Applications folder using the Finder and click to run it.
 
    ![install_mac_drag_app](https://github.com/user-attachments/assets/64ff68e2-5e6a-47ed-bbf1-b38f88fd53bb)
 
