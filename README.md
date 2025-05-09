@@ -9,7 +9,7 @@ GDSiMS is a graphical user interface for a malaria mosquito population model pro
 - Best for beginners and non-programmers
 - User-friendly interface
 - ‘In-house’, interactive data visualisation features – selected plots and animations chosen to best illustrate and investigate the model.
-- Short and easy installation process, though distribution is currently only available on previously tested systems (Windows 10, 11). (Testing for other systems is in progress.)
+- Short and easy installation process, though distribution is currently only available on previously tested systems (Windows 10, 11, ARM-based Macs).
 - Options to load pre-defined parameter sets and/or tweak parameters
 - Advanced parameter window dialog
 - Tooltips on parameter labels provide instant descriptions when hovering over them
@@ -19,14 +19,14 @@ GDSiMS is a graphical user interface for a malaria mosquito population model pro
 ## Should I use the GUI or the model program?
 The graphical user interface (GUI) is best suited to beginners to the model and non-programmers. The GUI offers ‘in-house’ selected data visualisation features which best illustrate the model behaviours. Plots and animations otherwise need to be created from scripts separate to the model program (we provide sample Python scripts).
 
-The GUI is easy and quick to install, though only currently available on Windows 10 and 11 systems (testing on other systems is in progress). The model program uses cross-platform tools to ensure compatibility with all systems, which, though simplified and documented, makes it a more complex installation process. 
+The GUI is easy and quick to install, though only currently available on Windows 10 and 11 systems and ARM-based Macs. The model program uses cross-platform tools to ensure compatibility with all systems, which, though simplified and documented, makes it a more complex installation process. 
 
 The model program is best suited to advanced users in need of quick custom parameter set changes. The model program also offers a command-line interface (CLI), which may be used by those not familiar with C++, and offers more pre-defined sets compared to the GUI. Directly interacting with the C++ code also provides flexible use cases thanks to its flexible architecture.
 
 Both are freely available on their respective GitHub repositories, have an open-source licence and aim to have a documentation website with tutorials (tutorials for the GUI are in progress).
 
 ## Installation
-GDSiMS is currently available for Windows 10 and 11 and macOS.
+GDSiMS is currently available for Windows 10 and 11 and ARM-based macOS (Apple Silicon).
 
 ### Windows
 1. Download the files:
