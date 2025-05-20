@@ -47,7 +47,7 @@ GDSiMS is currently available for Windows 10 and 11 and ARM-based macOS (Apple S
       ```
    ii. Alternatively, download the files as a ZIP folder, unzip and move to your chosen directory.
    
-   ![GDSiMS_installation_download_zip](https://github.com/user-attachments/assets/617f44d3-3d69-4bc3-9b3e-c21cd307a923)
+      ![GDSiMS_installation_download_zip](https://github.com/user-attachments/assets/617f44d3-3d69-4bc3-9b3e-c21cd307a923)
 
 3. Open the ```dist_win/GDSiMS``` directory and run the GDSiMS executable file.
    
@@ -55,24 +55,48 @@ GDSiMS is currently available for Windows 10 and 11 and ARM-based macOS (Apple S
 
 ### Mac
 
-1. Install [Homebrew](https://git-scm.com/downloads) and [Git](https://git-scm.com/downloads/mac) if not already installed. This can be easily done by opening a terminal window and running these two commands:
+1. Install [Homebrew](https://brew.sh/). This can be easily done by opening a terminal window and running this command:
+   
    ```bash
    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
+   
+   i. Make sure to follow the Next steps given at the end - these will be slightly different on your system to the image below, make sure to copy the commands given to **you**.
+
+      ![install_mac_finish_brew](https://github.com/user-attachments/assets/e146eb3a-33ae-477b-b707-1953998a928a)
+
+2. Install [Git](https://git-scm.com/downloads/mac) if not already installed:
+   
+   ```bash
    brew install git
    ```
-   Then, install [Git LFS](https://git-lfs.com/):
+   
+3. Then, install [Git LFS](https://git-lfs.com/):
+   
    ```bash
    brew install git-lfs
    ```
    
-2. Navigate to your chosen directort and clone the repository:
+   i. Make sure to follow the Caveats given towards the end by running these commands:
+   
+      ```bash
+      git lfs install
+      git lfs install --system
+      ```
+      
+     ![install_mac_finish_git_lfs](https://github.com/user-attachments/assets/3c1c42d5-502f-4010-80d8-ce4c62ca8419)
+
+
+4. Navigate to your chosen directory and clone the repository:
+   
    ```bash
    cd /Users/username/Documents/
    git clone https://github.com/AceRNorth/GDSiMS.git
    ```
+   
    Note: Mac users must clone the repository. ZIP downloading will not work due to the way the large .dmg file has been stored on GitHub.
 
-3. Open your chosen folder on the Finder and click on the ```dist_mac``` folder and then on the ```GDSiMS.dmg``` file.
+5. Open your chosen folder on the Finder and click on the ```dist_mac``` folder and then on the ```GDSiMS.dmg``` file.
    
    i. The .dmg file will open a prompt, asking you to drag the GDSiMS application into your Applications directory (you have to physically drag the icon into the other icon). This will install it as an app onto your system, and you can then find the app in your Applications folder using the Finder and click to run it.
 
