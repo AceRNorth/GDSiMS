@@ -32,11 +32,12 @@
 # FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+# Before running this script, run "brew install create-dmg"
 
-mkdir -p dist/dmg
-rm -r dist/dmg/*
-cp -r "dist/GDSiMS.app" dist/dmg
-test -f "dist/GDSiMS.dmg" && rm "dist/GDSiMS.dmg"
+mkdir -p dist_mac/dmg
+rm -r dist_mac/dmg/*
+cp -r "dist_mac/GDSiMS.app" dist_mac/dmg
+test -f "dist_mac/GDSiMS.dmg" && rm "dist_mac/GDSiMS.dmg"
 create-dmg \
 	--volname "GDSiMS" \
 	--window-pos 200 120 \
@@ -45,6 +46,6 @@ create-dmg \
 	--icon "GDSiMS.app" 175 120 \
 	--hide-extension "GDSiMS.app" \
 	--app-drop-link 425 120 \
-	"dist/GDSiMS.dmg" \
-	"dist/dmg/"
+	"dist_mac/GDSiMS.dmg" \
+	"dist_mac/dmg/"
 
