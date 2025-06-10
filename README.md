@@ -26,9 +26,28 @@ The model program is best suited to advanced users in need of quick custom param
 Both are freely available on their respective GitHub repositories, have an open-source licence and aim to have a documentation website with tutorials (tutorials for the GUI are in progress).
 
 ## Installation
-GDSiMS is currently available for Windows 10 and 11 and ARM-based macOS (Apple Silicon).
+### Download (Recommended)
+GDSiMS is currently available for Windows 10 and 11 and ARM-based macOS (Apple Silicon) via the Releases tab on the right-hand side of the repository. Click on the latest release and scroll down to download the appropriate asset for your system. 
 
-### Windows
+Output file locations are discussed in the [Usage](#usage) section below.
+
+#### Windows
+Download the GDSiMS_Win ZIP folder and extract the files before running the GDSiMS executable.
+
+Note: Windows Defender may pop up when attempting to run the executable. This is because it doesn’t recognise the distributor. The application is safe, so you can click on ‘More info’ and then ‘Run anyway’.
+
+#### Mac (ARM-based, i.e. Apple Silicon)
+Download the GDSiMS_Mac DMG file and click to open it. 
+
+The DMG file will open a prompt, asking you to drag the GDSiMS application into your Applications directory (you have to physically drag the icon into the other icon). This will install it as an app onto your system, and you can then find the app in your Applications folder using the Finder and click to run it.
+
+   ![install_mac_drag_app](https://github.com/user-attachments/assets/0e045d03-42cb-42ad-b053-7199e8ed9f71)
+
+When clicking to run, you may get a warning saying '"GDSiMS not opened - Apple could not verify "GDSiMS" is free of malware that may harm your Mac or compromise your privacy". If so, click Done. This warning can be bypassed by following these short [instructions](https://support.apple.com/en-gb/guide/mac-help/mchleab3a043/mac). You should then be able to run the app normally.
+
+### Source (Deprecated)
+Old versions of the distributions are available on the repository via git clone and Git LFS. These will be removed soon.
+#### Windows
 1. Download the files:
    
    i. Clone the repository via Git Bash (recommended):
@@ -53,7 +72,7 @@ GDSiMS is currently available for Windows 10 and 11 and ARM-based macOS (Apple S
    
    Note: Windows Defender may pop up when attempting to run the executable. This is because it doesn’t recognise the distributor. The application is safe, so you can click on ‘More info’ and then ‘Run anyway’.
 
-### Mac
+#### Mac
 
 1. Install [Homebrew](https://brew.sh/). This can be easily done by opening a terminal window and running this command:
    
@@ -100,7 +119,7 @@ GDSiMS is currently available for Windows 10 and 11 and ARM-based macOS (Apple S
    
    i. The .dmg file will open a prompt, asking you to drag the GDSiMS application into your Applications directory (you have to physically drag the icon into the other icon). This will install it as an app onto your system, and you can then find the app in your Applications folder using the Finder and click to run it.
 
-   ![install_mac_drag_app](https://github.com/user-attachments/assets/64ff68e2-5e6a-47ed-bbf1-b38f88fd53bb)
+   ![install_mac_drag_app](https://github.com/user-attachments/assets/e9f38974-6b17-47ff-b818-53a89497c9c4)
 
 
 ## Usage
