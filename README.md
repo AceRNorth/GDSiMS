@@ -1,9 +1,9 @@
-# GDSiMS
-GDSiMS: Gene Drive Simulator of Mosquito Spread is a Graphical User Interface (GUI) for the [model program](https://github.com/AceRNorth/GeneralMetapop) developed by Ace R. North and Sara Perez Vizan. 
+# GDSiMS GUI
+GDSiMS GUI is a Graphical User Interface (GUI) for [GDSiMS](https://github.com/AceRNorth/GeneralMetapop): the Gene Drive Simulator of Mosquito Spread, a model program developed by Ace R. North and Sara Perez Vizan. 
 
-Full documentation website for the model program can be found [here](https://acernorth.github.io/GeneralMetapop/ ).
+Full documentation website for GDSiMS [here](https://acernorth.github.io/GeneralMetapop/ ).
 
-GDSiMS is a graphical user interface for a malaria mosquito population model program. The model simulates the potential of gene drive technology to suppress mosquito populations and thus reduce malaria transmission. Gene drives are genetic elements that can quickly spread through a population via super-Mendelian inheritance frequencies (>50%). They can be engineered with specific properties to e.g. suppress mosquito populations via reduced female fertility (as modelled here). Our program can inform current gene drive development research, policy and regulation. 
+GDSiMS GUI is a graphical user interface for a malaria mosquito population model program. The model simulates the potential of gene drive technology to suppress mosquito populations and thus reduce malaria transmission. Gene drives are genetic elements that can quickly spread through a population via super-Mendelian inheritance frequencies (>50%). They can be engineered with specific properties to e.g. suppress mosquito populations via reduced female fertility (as modelled here). Our program can inform current gene drive development research, policy and regulation. 
 
 ## Features:
 - Best for beginners and non-programmers
@@ -16,7 +16,7 @@ GDSiMS is a graphical user interface for a malaria mosquito population model pro
 - Run the model program directly from the interface and check its progress
 - Organised output data directories with descriptive parameter spreadsheet files
 
-## Should I use the GUI or the model program?
+## Should I use GDSiMS GUI or the model program (GDSiMS)?
 The graphical user interface (GUI) is best suited to beginners to the model and non-programmers. The GUI offers ‘in-house’ selected data visualisation features which best illustrate the model behaviours. Plots and animations otherwise need to be created from scripts separate to the model program (we provide sample Python scripts).
 
 The GUI is easy and quick to install, though only currently available on Windows 10 and 11 systems and ARM-based Macs. The model program uses cross-platform tools to ensure compatibility with all systems, which, though simplified and documented, makes it a more complex installation process. 
@@ -27,7 +27,7 @@ Both are freely available on their respective GitHub repositories, have an open-
 
 ## Installation
 ### Download (Recommended)
-GDSiMS is currently available for Windows 10 and 11 and ARM-based macOS (Apple Silicon) via the Releases tab on the right-hand side of the repository. Click on the latest release and scroll down to download the appropriate asset for your system. 
+GDSiMS GUI is currently available for Windows 10 and 11 and ARM-based macOS (Apple Silicon) via the Releases tab on the right-hand side of the repository. Click on the latest release and scroll down to download the appropriate asset for your system. 
 
 Output file locations are discussed in the [Usage](#usage) section below.
 
